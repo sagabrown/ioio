@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="test">Test</string>
+    <string name="app_name">Test IOIO</string>
+    <string name="pwm">角度</string>
+</resources>
