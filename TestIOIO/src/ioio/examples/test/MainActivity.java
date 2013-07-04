@@ -20,11 +20,12 @@ import android.widget.*;
  */
 public class MainActivity extends IOIOActivity {
 	private ToggleButton button_;
-	private SeekBar seekBarPwm_[];
+	private SeekBar seekBarPwm_[], seekBarDCMotor_;
 	private static int seekBarPwmId[] = {R.id.seekBarPwm1, R.id.seekBarPwm2, R.id.seekBarPwm3,
 			R.id.seekBarPwm4, R.id.seekBarPwm5, R.id.seekBarPwm6, R.id.seekBarPwm7};
 	private final static int motorNum = seekBarPwmId.length;  // 操作するモーターの数
 	private Motor motor_[];
+	private DCMotor dcMotor_;
 
 	/**
 	 * Called when the activity is first created. Here we normally initialize
@@ -45,13 +46,19 @@ public class MainActivity extends IOIOActivity {
 		motor_[3] = new HS322HD(motorInitState[3]);  // 首（傾げる）
 		motor_[4] = new HS322HD(motorInitState[4]);  // 首（頷く）
 		motor_[5] = new HS322HD(motorInitState[5]);  // 首（振る）
-		motor_[6] = new ServoMotor(motorInitState[6]);  // ＜未使用＞
+		motor_[6] = new ServoMotor(motorInitState[6]);  // <未使用>
 		
 		seekBarPwm_ = new SeekBar[motorNum];
 		for(int i=0; i<motorNum; i++){
 			seekBarPwm_[i] = (SeekBar) findViewById(seekBarPwmId[i]);
 			seekBarPwm_[i].setProgress(thetaToProgress(motorInitState[i], motor_[i], seekBarPwm_[i].getMax()));
 		}
+		
+		
+		/* DCモータの設定 */
+		dcMotor_ = new DCMotor();
+		seekBarDCMotor_ =(SeekBar) findViewById(R.id.seekBarDCMotor);
+		seekBarDCMotor_.setProgress(seekBarDCMotor_.getMax()/2);
 	}
 	
 	private int thetaToProgress(double theta, Motor motor, int maxProgress){
@@ -71,6 +78,7 @@ public class MainActivity extends IOIOActivity {
 		/** The on-board LED. */
 		private DigitalOutput led_;
 		private PwmOutput pwm_[];
+		private PwmOutput dcpwm1_, dcpwm2_;
 
 		/**
 		 * Called every time a connection with IOIO has been established.
@@ -88,6 +96,10 @@ public class MainActivity extends IOIOActivity {
 			for(int i=0; i<motorNum; i++){
 				pwm_[i] = ioio_.openPwmOutput(i+1, motor_[i].getFreq());
 			}
+			
+			// ピン10と11はペア. DCモーターの制御
+			dcpwm1_ = ioio_.openPwmOutput(10, dcMotor_.getFreq());
+			dcpwm2_ = ioio_.openPwmOutput(11, dcMotor_.getFreq());
 		}
 
 		/**
@@ -105,6 +117,18 @@ public class MainActivity extends IOIOActivity {
 				for(int i=0; i<motorNum; i++){
 					pwm_[i].setDutyCycle((float) motor_[i].getDuty2((double)seekBarPwm_[i].getProgress() / seekBarPwm_[i].getMax()));
 				}
+				
+				float dcProgress = (float)((double)seekBarDCMotor_.getProgress() / seekBarDCMotor_.getMax() * 2.0 - 1.0);
+				if(dcProgress < 0){
+					dcpwm1_.setDutyCycle(0);
+					dcpwm2_.setDutyCycle(-dcProgress);
+				}else{
+					dcpwm1_.setDutyCycle(dcProgress);
+					dcpwm2_.setDutyCycle(0);
+				}
+			}else{
+				dcpwm1_.setDutyCycle(0);
+				dcpwm2_.setDutyCycle(0);
 			}
 			try {
 				Thread.sleep(10);
