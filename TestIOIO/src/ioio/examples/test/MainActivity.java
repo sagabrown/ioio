@@ -2,12 +2,14 @@ package ioio.examples.test;
 
 import ioio.examples.test.R;
 import ioio.lib.api.DigitalOutput;
-import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.*;
 
 /**
@@ -20,12 +22,7 @@ import android.widget.*;
  */
 public class MainActivity extends IOIOActivity {
 	private ToggleButton button_;
-	private SeekBar seekBarPwm_[], seekBarDCMotor_;
-	private static int seekBarPwmId[] = {R.id.seekBarPwm1, R.id.seekBarPwm2, R.id.seekBarPwm3,
-			R.id.seekBarPwm4, R.id.seekBarPwm5, R.id.seekBarPwm6, R.id.seekBarPwm7};
-	private final static int motorNum = seekBarPwmId.length;  // 操作するモーターの数
-	private Motor motor_[];
-	private DCMotor dcMotor_;
+	private Robot robot_;
 
 	/**
 	 * Called when the activity is first created. Here we normally initialize
@@ -34,37 +31,30 @@ public class MainActivity extends IOIOActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
+		
+		robot_ = new TEROOS();
+		
+        /* アクティビティビューにレイアウトをセットする　*/
+        setContentView(R.layout.main);
+		LinearLayout additionalLayout = (LinearLayout) findViewById(R.id.additionalLayout); 
+		additionalLayout.addView(robot_.getLayout(this));
+		
+        /* ボタンの処理設定 */
 		button_ = (ToggleButton) findViewById(R.id.button);
-		
-		/* 初期角度を設定する */
-		double motorInitState[] = {Math.PI*0.5, -Math.PI*0.5, Math.PI*0.25, -Math.PI*0.25, 0.0, 0.0, 0.0};
-		motor_ = new Motor[motorNum];
-		motor_[0] = new HS322HD(motorInitState[0]);  // 頭
-		motor_[1] = new HS322HD(motorInitState[1]);  // まぶた
-		motor_[2] = new HS322HD(motorInitState[2]);  // 目
-		motor_[3] = new HS322HD(motorInitState[3]);  // 首（傾げる）
-		motor_[4] = new HS322HD(motorInitState[4]);  // 首（頷く）
-		motor_[5] = new HS322HD(motorInitState[5]);  // 首（振る）
-		motor_[6] = new ServoMotor(motorInitState[6]);  // <未使用>
-		
-		seekBarPwm_ = new SeekBar[motorNum];
-		for(int i=0; i<motorNum; i++){
-			seekBarPwm_[i] = (SeekBar) findViewById(seekBarPwmId[i]);
-			seekBarPwm_[i].setProgress(thetaToProgress(motorInitState[i], motor_[i], seekBarPwm_[i].getMax()));
-		}
-		
-		
-		/* DCモータの設定 */
-		dcMotor_ = new DCMotor();
-		seekBarDCMotor_ =(SeekBar) findViewById(R.id.seekBarDCMotor);
-		seekBarDCMotor_.setProgress(seekBarDCMotor_.getMax()/2);
-	}
-	
-	private int thetaToProgress(double theta, Motor motor, int maxProgress){
-		return (int)( (theta-motor.getMinTheta())
-				/ (motor.getMaxTheta()-motor.getMinTheta()) 
-				* maxProgress );
+		button_.setOnClickListener(new OnClickListener() {
+			public void onClick(View arg0) {
+				try {
+					if(button_.isChecked()){
+						robot_.activate();
+					}else{
+						robot_.disactivate();
+					}
+				} catch (ConnectionLostException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		button_.setEnabled(true);	// IOIOに接続していないうちは押せない
 	}
 
 	/**
@@ -77,8 +67,6 @@ public class MainActivity extends IOIOActivity {
 	class Looper extends BaseIOIOLooper {
 		/** The on-board LED. */
 		private DigitalOutput led_;
-		private PwmOutput pwm_[];
-		private PwmOutput dcpwm1_, dcpwm2_;
 
 		/**
 		 * Called every time a connection with IOIO has been established.
@@ -91,15 +79,10 @@ public class MainActivity extends IOIOActivity {
 		 */
 		@Override
 		protected void setup() throws ConnectionLostException {
-			led_ = ioio_.openDigitalOutput(0, true);
-			pwm_ = new PwmOutput[motorNum];  // ピン1～ピンmotorNumに対応. 更にmotor[0]~motor[motorNum-1]に対応
-			for(int i=0; i<motorNum; i++){
-				pwm_[i] = ioio_.openPwmOutput(i+1, motor_[i].getFreq());
-			}
-			
-			// ピン10と11はペア. DCモーターの制御
-			dcpwm1_ = ioio_.openPwmOutput(10, dcMotor_.getFreq());
-			dcpwm2_ = ioio_.openPwmOutput(11, dcMotor_.getFreq());
+			led_ = ioio_.openDigitalOutput(0, true);	// ledライト
+			Log.d("debug", "open pins!!!");
+			robot_.openPins(ioio_, 1);					// ピンにモーターを対応させる
+			button_.setEnabled(false);
 		}
 
 		/**
@@ -113,27 +96,19 @@ public class MainActivity extends IOIOActivity {
 		@Override
 		public void loop() throws ConnectionLostException {
 			led_.write(!button_.isChecked());
-			if(button_.isChecked()){
-				for(int i=0; i<motorNum; i++){
-					pwm_[i].setDutyCycle((float) motor_[i].getDuty2((double)seekBarPwm_[i].getProgress() / seekBarPwm_[i].getMax()));
-				}
-				
-				float dcProgress = (float)((double)seekBarDCMotor_.getProgress() / seekBarDCMotor_.getMax() * 2.0 - 1.0);
-				if(dcProgress < 0){
-					dcpwm1_.setDutyCycle(0);
-					dcpwm2_.setDutyCycle(-dcProgress);
-				}else{
-					dcpwm1_.setDutyCycle(dcProgress);
-					dcpwm2_.setDutyCycle(0);
-				}
-			}else{
-				dcpwm1_.setDutyCycle(0);
-				dcpwm2_.setDutyCycle(0);
-			}
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 			}
+		}
+		
+		public void disconnected(){
+			try {
+				robot_.disconnected();
+			} catch (ConnectionLostException e) {
+				e.printStackTrace();
+			}
+			button_.setEnabled(false);
 		}
 	}
 

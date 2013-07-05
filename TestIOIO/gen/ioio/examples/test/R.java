@@ -14,17 +14,9 @@ public final class R {
         public static final int icon=0x7f020000;
     }
     public static final class id {
+        public static final int additionalLayout=0x7f060003;
         public static final int button=0x7f060001;
-        public static final int seekBarDCMotor=0x7f06000b;
-        public static final int seekBarPwm1=0x7f060003;
-        public static final int seekBarPwm2=0x7f060004;
-        public static final int seekBarPwm3=0x7f060005;
-        public static final int seekBarPwm4=0x7f060006;
-        public static final int seekBarPwm5=0x7f060007;
-        public static final int seekBarPwm6=0x7f060008;
-        public static final int seekBarPwm7=0x7f060009;
         public static final int textView1=0x7f060002;
-        public static final int textView2=0x7f06000a;
         public static final int title=0x7f060000;
     }
     public static final class layout {
@@ -32,7 +24,6 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f050001;
-        public static final int dcmotor=0x7f050003;
         public static final int pwm=0x7f050002;
         public static final int test=0x7f050000;
     }

@@ -16,51 +16,12 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/pwm" />
-
-<SeekBar
-    android:id="@+id/seekBarPwm1"
+<LinearLayout
+    android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-
-<SeekBar
-    android:id="@+id/seekBarPwm2"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-
-<SeekBar
-    android:id="@+id/seekBarPwm3"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-
-<SeekBar
-    android:id="@+id/seekBarPwm4"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-
-<SeekBar
-    android:id="@+id/seekBarPwm5"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-
-<SeekBar
-    android:id="@+id/seekBarPwm6"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-
-<SeekBar
-    android:id="@+id/seekBarPwm7"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
-
-<TextView
-    android:id="@+id/textView2"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="@string/dcmotor" />
-
-<SeekBar
-    android:id="@+id/seekBarDCMotor"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content" />
+    android:layout_height="fill_parent"
+    android:id="@+id/additionalLayout"
+    >
+</LinearLayout>
 
 </LinearLayout>

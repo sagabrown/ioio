@@ -2,9 +2,8 @@ package ioio.examples.test;
 
 /** HS-322HDのスペック・設定を保持するクラス **/
 public class HS322HD extends ServoMotor implements Motor {
-	public HS322HD(double theta0) {
-		super(theta0);
-		setSpec();
+	public HS322HD(double theta0, String name) {
+		super(theta0, name);
 	}
 	
 	/** スペックを設定(オーバーライド) **/

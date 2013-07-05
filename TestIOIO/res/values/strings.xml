@@ -2,6 +2,5 @@
 <resources>
     <string name="test">Test</string>
     <string name="app_name">Test IOIO</string>
-    <string name="pwm">角度</string>
-    <string name="dcmotor">DCモータ</string>
+    <string name="pwm">モーター制御</string>
 </resources>
