@@ -21,8 +21,8 @@ public abstract class ServoMotor implements Motor {
 	protected double minDuty = freq*minPulseRanging * 0.000001;	// 最小デューティー比. 0以上
 	protected double maxDuty = freq*maxPulseRanging * 0.000001;	// 最大デューティー比. 1以下
 	
-	private double initState;	// 初期状態. 0~1
-	private double state;  		// 現在の状態. 0~1
+	private float initState;	// 初期状態. 0~1
+	private float state;  		// 現在の状態. 0~1
 	private boolean isActive;
 	
 	private String name;
@@ -33,7 +33,7 @@ public abstract class ServoMotor implements Motor {
 	/** コンストラクタ(オーバーライドする) **/
 	public ServoMotor(double theta0, String name) {  // 初期角度を受け取る
 		setSpec();
-		this.initState = thetaToRatio(theta0);
+		this.initState = (float)thetaToRatio(theta0);
 		this.name = name;
 	}
 	
@@ -71,16 +71,13 @@ public abstract class ServoMotor implements Motor {
 			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				float duty = (float) ratioToDuty((double)seekBar.getProgress() / seekBar.getMax());
-				if(isActive && pin!=null){
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e1) {
-					}
-					/* シークバーが変更されたときpwm値を変える */
-					changeDuty(duty);
+				state = (float) ratioToDuty((double)progress / seekBar.getMax());
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e1) {
 				}
-				state = duty;
+				/* シークバーが変更されたときpwm値を変える */
+				changeDuty();
 				label.setText(name+"("+radToDeg(minTheta)+" ~ "+radToDeg(maxTheta)+")"+": "+radToDeg(ratioToTheta(state)));
 			}
 		});
@@ -95,6 +92,7 @@ public abstract class ServoMotor implements Motor {
 	
 	public void activate() throws ConnectionLostException {
 		isActive = true;
+		changeDuty();
 		seekBar.setEnabled(true);
 	}
 	public void disactivate() throws ConnectionLostException {
@@ -110,19 +108,20 @@ public abstract class ServoMotor implements Motor {
 	}
 	
 	/** pwm値を変える **/
-	private void changeDuty(float duty){
-		try {
-			pin.setDutyCycle(duty);
-		} catch (ConnectionLostException e) {
-			e.printStackTrace();
+	private void changeDuty(){
+		if(isActive && pin!=null){
+			try {
+				pin.setDutyCycle(state);
+			} catch (ConnectionLostException e) {
+				e.printStackTrace();
+			}
 		}
-		state = duty;
 	}
 	
 	/** 受け取った番号からpinNumぶんのピンを開いて対応づける(開いたピンの数を返す) **/
 	public int openPin(IOIO ioio, int num) throws ConnectionLostException{
 		pin = ioio.openPwmOutput(num, getFreq());
-		changeDuty((float)state);
+		changeDuty();
 		return pinNum;
 	}
 	

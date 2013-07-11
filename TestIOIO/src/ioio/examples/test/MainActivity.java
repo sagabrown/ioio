@@ -32,7 +32,8 @@ public class MainActivity extends IOIOActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		robot_ = new TEROOS();
+		//robot_ = new TEROOS();
+		robot_ = new CrawlRobot();
 		
         /* アクティビティビューにレイアウトをセットする　*/
         setContentView(R.layout.main);
@@ -82,7 +83,7 @@ public class MainActivity extends IOIOActivity {
 			led_ = ioio_.openDigitalOutput(0, true);	// ledライト
 			Log.d("debug", "open pins!!!");
 			robot_.openPins(ioio_, 1);					// ピンにモーターを対応させる
-			button_.setEnabled(false);
+			button_.setEnabled(true);
 		}
 
 		/**
@@ -101,14 +102,17 @@ public class MainActivity extends IOIOActivity {
 			} catch (InterruptedException e) {
 			}
 		}
-		
+
 		public void disconnected(){
+			/*
 			try {
 				robot_.disconnected();
 			} catch (ConnectionLostException e) {
 				e.printStackTrace();
 			}
 			button_.setEnabled(false);
+			*/
+			Log.d("debug", "disconnected!!!");
 		}
 	}
 

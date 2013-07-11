@@ -18,8 +18,8 @@ public class DCMotor implements Motor {
 	protected double minDuty;	// 最小デューティー比. 0以上
 	protected double maxDuty;	// 最大デューティー比. 1以下
 	
-	private double initState;
-	private double state;
+	private float initState;
+	private float state;
 	private boolean isActive;
 
 	private String name;
@@ -30,12 +30,12 @@ public class DCMotor implements Motor {
 	
 	public DCMotor(String name) {
 		setSpec();
-		this.initState = 0.5;
+		this.initState = (float) 0.5;
 		this.name = name;
 	}
 	public DCMotor(double initState, String name) {
 		setSpec();
-		this.initState = initState;
+		this.initState = (float)initState;
 		this.name = name;
 	}
 	
@@ -69,11 +69,8 @@ public class DCMotor implements Motor {
 			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				float duty = (float)((double)progress / seekBar.getMax() * 2.0 - 1.0);
-				if(isActive && pin1!=null && pin2!=null	){
-					changeDuty(duty);
-				}
-				state = duty;
+				state = (float)((double)progress / seekBar.getMax() * 2.0 - 1.0);
+				changeDuty();
 				label.setText(name+": "+state);
 			}
 		});
@@ -90,29 +87,31 @@ public class DCMotor implements Motor {
 	public int openPin(IOIO ioio, int num) throws ConnectionLostException{
 		pin1 = ioio.openPwmOutput(num, getFreq());
 		pin2 = ioio.openPwmOutput(num+1, getFreq());
-		changeDuty((float)state);
+		changeDuty();
 		label.setText(name+": "+state);
 		return pinNum;
 	}
 	
 	/** pwm値を変える **/
-	private void changeDuty(float duty){
-		try {
-			if(duty < 0){
-				pin1.setDutyCycle(0);
-				pin2.setDutyCycle(-duty);
-			}else{
-				pin1.setDutyCycle(duty);
-				pin2.setDutyCycle(0);
+	private void changeDuty(){
+		if(isActive && pin1!=null && pin2!=null	){
+			try {
+				if(state < 0){
+					pin1.setDutyCycle(0);
+					pin2.setDutyCycle(-state);
+				}else{
+					pin1.setDutyCycle(state);
+					pin2.setDutyCycle(0);
+				}
+			} catch (ConnectionLostException e) {
+				e.printStackTrace();
 			}
-		} catch (ConnectionLostException e) {
-			e.printStackTrace();
 		}
-		state = duty;
 	}
 	
 	public void activate() throws ConnectionLostException {
 		isActive = true;
+		changeDuty();
 		seekBar.setEnabled(true);
 	}
 	public void disactivate() throws ConnectionLostException {
@@ -121,6 +120,7 @@ public class DCMotor implements Motor {
 		isActive = false;
 		seekBar.setEnabled(false);
 	}
+	
 	public void disconnected() throws ConnectionLostException {
 		pin1 = null;
 		pin2 = null;

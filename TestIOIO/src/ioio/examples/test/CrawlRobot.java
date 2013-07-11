@@ -6,7 +6,7 @@ import android.widget.LinearLayout;
 
 public class CrawlRobot implements Robot {
 	private Motor[] motor;
-	private double[] motorInitState = {0.0};  // 初期値
+	private double[] motorInitState = {0.5};  // 初期値
 	private int motorNum = motorInitState.length;
 	private LinearLayout layout;
 	
@@ -25,7 +25,7 @@ public class CrawlRobot implements Robot {
 		init();
 	}
 
-	/* 初期角度を設定する */
+	/* 初期速度を設定する */
 	private void init(){
 		motor = new Motor[motorNum];
 		motor[0] = new DCMotor(motorInitState[0], "くるま");  // くるま
