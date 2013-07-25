@@ -7,6 +7,7 @@ import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -21,6 +22,7 @@ import android.widget.*;
  * HelloIOIOPower example.
  */
 public class MainActivity extends IOIOActivity {
+	private Util util;
 	private ToggleButton button_;
 	private Robot robot_;
 
@@ -31,12 +33,13 @@ public class MainActivity extends IOIOActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		util = new Util(new Handler());
 		
-		//robot_ = new TEROOS();
-		robot_ = new CrawlRobot();
+		//robot_ = new TEROOS(util);
+		robot_ = new CrawlRobot(util);
 		
         /* アクティビティビューにレイアウトをセットする　*/
-        setContentView(R.layout.main);
+        setContentView(R.layout.controller);
 		LinearLayout additionalLayout = (LinearLayout) findViewById(R.id.additionalLayout); 
 		additionalLayout.addView(robot_.getLayout(this));
 		
@@ -98,7 +101,7 @@ public class MainActivity extends IOIOActivity {
 		public void loop() throws ConnectionLostException {
 			led_.write(!button_.isChecked());
 			try {
-				Thread.sleep(10);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 			}
 		}

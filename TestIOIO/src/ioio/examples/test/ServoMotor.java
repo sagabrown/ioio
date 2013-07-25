@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 /** モーターのスペック・設定からデューティー比を計算するクラス **/
 public abstract class ServoMotor implements Motor {
+	private Util util;
+	
 	protected static final int pinNum = 1;	// 必要なピンの数
 	protected PwmOutput pin;				// 対応しているピン
 	protected double maxSpeed;				// dig/msec * rad/dig = rad/msec
@@ -31,7 +33,8 @@ public abstract class ServoMotor implements Motor {
 	private TextView label;
 
 	/** コンストラクタ(オーバーライドする) **/
-	public ServoMotor(double theta0, String name) {  // 初期角度を受け取る
+	public ServoMotor(Util util, double theta0, String name) {  // 初期角度を受け取る
+		this.util = util;
 		setSpec();
 		this.initState = (float)thetaToRatio(theta0);
 		this.name = name;
@@ -62,7 +65,7 @@ public abstract class ServoMotor implements Motor {
         layout.setOrientation(LinearLayout.VERTICAL);
 		
 		label = new TextView(parent);
-		label.setText(name+"("+radToDeg(minTheta)+" ~ "+radToDeg(maxTheta)+")"+": "+radToDeg(ratioToTheta(state)));
+		util.setText(label, name+"("+radToDeg(minTheta)+" ~ "+radToDeg(maxTheta)+")"+": "+radToDeg(ratioToTheta(state)));
 		
         /* シークバーを作成して登録　*/
 		seekBar = new SeekBar(parent);
@@ -72,17 +75,13 @@ public abstract class ServoMotor implements Motor {
 			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				state = (float) ratioToDuty((double)progress / seekBar.getMax());
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e1) {
-				}
 				/* シークバーが変更されたときpwm値を変える */
 				changeDuty();
-				label.setText(name+"("+radToDeg(minTheta)+" ~ "+radToDeg(maxTheta)+")"+": "+radToDeg(ratioToTheta(state)));
+				util.setText(label, name+"("+radToDeg(minTheta)+" ~ "+radToDeg(maxTheta)+")"+": "+radToDeg(ratioToTheta(state)));
 			}
 		});
-		seekBar.setProgress((int)(getState() * seekBar.getMax()));
-		seekBar.setEnabled(false);
+		util.setProgress(seekBar, (int)(getState() * seekBar.getMax()));
+		util.setEnabled(seekBar, false);
 		
 		layout.addView(label);
 	    layout.addView(seekBar);
@@ -93,18 +92,18 @@ public abstract class ServoMotor implements Motor {
 	public void activate() throws ConnectionLostException {
 		isActive = true;
 		changeDuty();
-		seekBar.setEnabled(true);
+		util.setEnabled(seekBar, true);
 	}
 	public void disactivate() throws ConnectionLostException {
 		//if(pin!=null)	pin.setDutyCycle((float) ratioToDuty(initState));
 		if(pin!=null)	pin.setDutyCycle(0);
 		isActive = false;
-		seekBar.setEnabled(false);
+		util.setEnabled(seekBar, false);
 	}
 	public void disconnected() throws ConnectionLostException {
 		pin = null;
 		isActive = false;
-		seekBar.setEnabled(false);
+		util.setEnabled(seekBar, false);
 	}
 	
 	/** pwm値を変える **/

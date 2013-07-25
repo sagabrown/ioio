@@ -2,8 +2,8 @@ package ioio.examples.test;
 
 /** Blue Arrow BA-TS-3.6 のスペック・設定を保持するクラス **/
 public class BlueArrowBA_TS extends ServoMotor implements Motor {
-	public BlueArrowBA_TS(double theta0, String name) {
-		super(theta0, name);
+	public BlueArrowBA_TS(Util util, double theta0, String name) {
+		super(util, theta0, name);
 		setSpec();
 	}
 	

@@ -3,12 +3,15 @@ package ioio.examples.test;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
+import android.os.Handler;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 /** モーターのスペック・設定からデューティー比を計算するクラス **/
 public class DCMotor implements Motor {
+	private Util util;
+	
 	protected static final int pinNum = 2;	// 必要なピンの数
 	protected PwmOutput pin1, pin2;	// 対応しているピン
 	protected double maxSpeed;				// dig/msec * rad/dig = rad/msec
@@ -28,12 +31,14 @@ public class DCMotor implements Motor {
 	private TextView label;
 	
 	
-	public DCMotor(String name) {
+	public DCMotor(Util util, String name) {
+		this.util = util;
 		setSpec();
 		this.initState = (float) 0.5;
 		this.name = name;
 	}
-	public DCMotor(double initState, String name) {
+	public DCMotor(Util util, double initState, String name) {
+		this.util = util;
 		setSpec();
 		this.initState = (float)initState;
 		this.name = name;
@@ -63,7 +68,7 @@ public class DCMotor implements Motor {
 		seekBar = new SeekBar(parent);
 		
 		label = new TextView(parent);
-		label.setText(name+": "+state);
+		util.setText(label, name+": "+state);
 		
 		seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
@@ -71,11 +76,11 @@ public class DCMotor implements Motor {
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 				state = (float)((double)progress / seekBar.getMax() * 2.0 - 1.0);
 				changeDuty();
-				label.setText(name+": "+state);
+				util.setText(label, name+": "+state);
 			}
 		});
-		seekBar.setProgress((int)(getState() * seekBar.getMax()));
-		seekBar.setEnabled(false);
+		util.setProgress(seekBar, (int)(getState() * seekBar.getMax()));
+		util.setEnabled(seekBar, false);
 		
 		layout.addView(label);
 	    layout.addView(seekBar);
@@ -88,7 +93,7 @@ public class DCMotor implements Motor {
 		pin1 = ioio.openPwmOutput(num, getFreq());
 		pin2 = ioio.openPwmOutput(num+1, getFreq());
 		changeDuty();
-		label.setText(name+": "+state);
+		util.setText(label, name+": "+state);
 		return pinNum;
 	}
 	
@@ -112,20 +117,20 @@ public class DCMotor implements Motor {
 	public void activate() throws ConnectionLostException {
 		isActive = true;
 		changeDuty();
-		seekBar.setEnabled(true);
+		util.setEnabled(seekBar, true);
 	}
 	public void disactivate() throws ConnectionLostException {
 		if(pin1!=null)	pin1.setDutyCycle(0);
 		if(pin2!=null)	pin2.setDutyCycle(0);
 		isActive = false;
-		seekBar.setEnabled(false);
+		util.setEnabled(seekBar, false);
 	}
 	
 	public void disconnected() throws ConnectionLostException {
 		pin1 = null;
 		pin2 = null;
 		isActive = false;
-		seekBar.setEnabled(false);
+		util.setEnabled(seekBar, false);
 	}
 	
 	/** 動かしたい角度(rad)に対して, デューティー比を返す **/
