@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/sensorLayout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
@@ -12,8 +13,9 @@
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TableLayout
-        android:layout_width="fill_parent" android:layout_marginLeft="30dp"
-        android:layout_height="wrap_content" >
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp" >
 
         <TableRow
             android:id="@+id/tableRow1"
@@ -28,10 +30,10 @@
 
             <TextView
                 android:id="@+id/azimuth"
-                android:layout_width="wrap_content" android:layout_marginLeft="50dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
                 android:text="--" />
-
         </TableRow>
 
         <TableRow
@@ -47,10 +49,10 @@
 
             <TextView
                 android:id="@+id/pitch"
-                android:layout_width="wrap_content" android:layout_marginLeft="50dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
                 android:text="--" />
-
         </TableRow>
 
         <TableRow
@@ -66,14 +68,90 @@
 
             <TextView
                 android:id="@+id/roll"
-                android:layout_width="wrap_content" android:layout_marginLeft="50dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
                 android:text="--" />
-
         </TableRow>
 
         <TableRow
             android:id="@+id/tableRow4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+        </TableRow>
+    </TableLayout>
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="直交座標"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TableLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp" >
+
+        <TableRow
+            android:id="@+id/TableRow02"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/TextView03"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="x" />
+
+            <TextView
+                android:id="@+id/valueX"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
+                android:text="--" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/TextView02"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="y" />
+
+            <TextView
+                android:id="@+id/valueY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
+                android:text="--" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow04"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/TextView04"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="z" />
+
+            <TextView
+                android:id="@+id/valueZ"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
+                android:text="--" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/TableRow03"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
         </TableRow>

@@ -20,8 +20,8 @@ public class MainActivityGroup extends ActivityGroup {
 	    // インスタンスの取得
 	    lam = getLocalActivityManager();
 
-	    setView(SensorTest.class, "SensorTest");
 	    setView(MainActivity.class, "MainActivity");
+	    setView(SensorTest.class, "SensorTest");
     }
     
     private void setView(Class<?> cls, String name){
