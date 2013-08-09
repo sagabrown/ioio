@@ -43,6 +43,15 @@ public class TrailView extends View {
         lastTp = new TrailPoint(0,0,0);
     }
     
+    @Override
+    protected void onMeasure(int widthMeasureSpec,int heightMeasureSpec){
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        // Viewの描画サイズを指定する
+        setMeasuredDimension(width,2*halfHeight);
+    }
+    
+    
     public void addTp(float x, float y, float z){
     	TrailPoint tp = new TrailPoint(lastTp.x + x, lastTp.y + y, lastTp.z + z);
 		synchronized(tpList){
@@ -63,13 +72,15 @@ public class TrailView extends View {
 	        	int z = (int) (scale * tp.z);
 
 	            //paint.setARGB(125+y,255,255,255);
+	        	/*
 	        	int round = 5 + y/10;
 	        	if(round<1){
 	        		round = 1;
 	        	}else if(9<round){
 	        		round = 9;
 	        	}
-	        	canvas.drawCircle(x, halfHeight - z, round, paint);
+	        	*/
+	        	canvas.drawCircle(x, halfHeight - z, 3, paint);
 	        }
         }
     }

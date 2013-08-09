@@ -13,8 +13,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Layout;
 import android.util.Log;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 public class SensorTest extends Activity implements SensorEventListener {
 
@@ -41,6 +44,8 @@ public class SensorTest extends Activity implements SensorEventListener {
 	TextView valueY;
 	TextView valueZ;
 	
+	ToggleButton logging;
+	
 	Util util;
 	Thread thread;
 	
@@ -61,12 +66,12 @@ public class SensorTest extends Activity implements SensorEventListener {
 			x = (float)(r * Math.sin(theta) * Math.cos(phi));
 			y = (float)(r * Math.sin(theta) * Math.sin(phi));
 			z = (float)(r * Math.cos(theta));
-			util.setText(valueX, Float.toString(x));
-			util.setText(valueY, Float.toString(y));
-			util.setText(valueZ, Float.toString(z));
+			util.setText(valueX, String.format("%.3f", x));
+			util.setText(valueY, String.format("%.3f", y));
+			util.setText(valueZ, String.format("%.3f", z));
 			
 			// Trailに情報追加
-			trailView.addTp(x,y,z);
+			if(logging.isChecked())	trailView.addTp(x,y,z);
 		}
 	};
 	
@@ -97,8 +102,6 @@ public class SensorTest extends Activity implements SensorEventListener {
 			SensorManager.SENSOR_DELAY_GAME);
 		thread = new Thread(task);
 		thread.start();
-		
-		trailView.onResume();
 
         // タイマーを作成する
         ses = Executors.newSingleThreadScheduledExecutor();
@@ -109,7 +112,6 @@ public class SensorTest extends Activity implements SensorEventListener {
 	public void onPause(){
 		super.onPause();
 		sensorManager.unregisterListener(this);
-		trailView.onPause();
 
         // タイマーを停止する
         ses.shutdown();
@@ -123,6 +125,14 @@ public class SensorTest extends Activity implements SensorEventListener {
 		valueX = (TextView)findViewById(R.id.valueX);
 		valueY = (TextView)findViewById(R.id.valueY);
 		valueZ = (TextView)findViewById(R.id.valueZ);
+		logging = (ToggleButton)findViewById(R.id.logging);
+		logging.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if(isChecked)	trailView.onResume();
+				else			trailView.onPause();
+			}
+		});
 	}
 	
 	protected void initSensor(){
