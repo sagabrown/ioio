@@ -16,6 +16,7 @@ import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -31,8 +32,6 @@ public class SensorTest extends Activity implements SensorEventListener {
 	float[] gravity = new float[3];
 	float[] geomagnetic = new float[3];
 	float[] attitude = new float[3];
-	float r = 1;
-	float x, y, z;
 	
 	LinearLayout layout;
 	
@@ -45,6 +44,8 @@ public class SensorTest extends Activity implements SensorEventListener {
 	TextView valueZ;
 	
 	ToggleButton logging;
+	SeekBar seekBarX, seekBarY, seekBarZ;
+	SeekBar seekBarUD, seekBarLR;
 	
 	Util util;
 	Thread thread;
@@ -60,18 +61,27 @@ public class SensorTest extends Activity implements SensorEventListener {
 			util.setText(rollText, Integer.toString((int)(attitude[2] * RAD2DEG)));
 	
 			// 直交座標に変換
+			float x1, y1, z1;
+			float x2, y2, z2;
 			double theta, phi;
+			// 前
 			theta = Math.PI*0.5 + attitude[1];
 			phi = - attitude[0];
-			x = (float)(r * Math.sin(theta) * Math.cos(phi));
-			y = (float)(r * Math.sin(theta) * Math.sin(phi));
-			z = (float)(r * Math.cos(theta));
-			util.setText(valueX, String.format("%.3f", x));
-			util.setText(valueY, String.format("%.3f", y));
-			util.setText(valueZ, String.format("%.3f", z));
+			x1 = (float)(Math.sin(theta) * Math.cos(phi));
+			y1 = (float)(Math.sin(theta) * Math.sin(phi));
+			z1 = (float)(Math.cos(theta));
+			util.setText(valueX, String.format("%.3f", x1));
+			util.setText(valueY, String.format("%.3f", y1));
+			util.setText(valueZ, String.format("%.3f", z1));
+			// 右
+			theta = Math.PI*0.5 + attitude[2];
+			phi = -Math.PI*0.5 - attitude[0];
+			x2 = (float)(Math.sin(theta) * Math.cos(phi));
+			y2 = (float)(Math.sin(theta) * Math.sin(phi));
+			z2 = (float)(Math.cos(theta));
 			
 			// Trailに情報追加
-			if(logging.isChecked())	trailView.addTp(x,y,z);
+			if(logging.isChecked())	trailView.addTp(x1,y1,z1,x2,y2,z2);
 		}
 	};
 	
@@ -86,6 +96,63 @@ public class SensorTest extends Activity implements SensorEventListener {
 		layout.addView(trailView);
         
 		findViews();
+		
+		// TrailViewの操作パネル
+		seekBarX = new SeekBar(this);
+		seekBarX.setMax(100);
+		seekBarX.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				trailView.setLookX((float)progress-50);
+			}
+		});
+		layout.addView(seekBarX);
+
+		seekBarY = new SeekBar(this);
+		seekBarY.setMax(100);
+		seekBarY.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				trailView.setLookY((float)progress-50);
+			}
+		});
+		layout.addView(seekBarY);
+		
+		seekBarZ = new SeekBar(this);
+		seekBarZ.setMax(100);
+		seekBarZ.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				trailView.setLookZ((float)progress-50);
+			}
+		});
+		layout.addView(seekBarZ);
+		
+		seekBarUD = new SeekBar(this);
+		seekBarUD.setMax(100);
+		seekBarUD.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				trailView.setLookUD((float)progress-50);
+			}
+		});
+		layout.addView(seekBarUD);
+		
+		seekBarLR = new SeekBar(this);
+		seekBarLR.setMax(100);
+		seekBarLR.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				trailView.setLookLR((float)progress-50);
+			}
+		});
+		layout.addView(seekBarLR);
+		
 		initSensor();
 	}
 	
