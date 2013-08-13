@@ -5,6 +5,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import android.app.Activity;
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -23,7 +25,7 @@ import android.widget.ToggleButton;
 public class SensorTest extends Activity implements SensorEventListener {
 
 	public final static String TAG = "SensorTest";
-	protected final static double RAD2DEG = 180/Math.PI;
+	protected final static float RAD2DEG = (float)(180/Math.PI);
     private ScheduledExecutorService ses = null;
 	
 	SensorManager sensorManager;
@@ -45,10 +47,9 @@ public class SensorTest extends Activity implements SensorEventListener {
 	
 	ToggleButton logging;
 	SeekBar seekBarX, seekBarY, seekBarZ;
-	SeekBar seekBarUD, seekBarLR;
+	SeekBar seekBarLaX, seekBarLaY, seekBarLaZ;
 	
 	Util util;
-	Thread thread;
 	
 	TrailView trailView;
 	
@@ -82,6 +83,10 @@ public class SensorTest extends Activity implements SensorEventListener {
 			
 			// Trailに情報追加
 			if(logging.isChecked())	trailView.addTp(x1,y1,z1,x2,y2,z2);
+
+			// 現在の情報
+			trailView.setNowData(attitude[0] * RAD2DEG, attitude[1] * RAD2DEG, attitude[2] * RAD2DEG,
+					x1,y1,z1,x2,y2,z2);
 		}
 	};
 	
@@ -98,60 +103,12 @@ public class SensorTest extends Activity implements SensorEventListener {
 		findViews();
 		
 		// TrailViewの操作パネル
-		seekBarX = new SeekBar(this);
-		seekBarX.setMax(100);
-		seekBarX.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				trailView.setLookX((float)progress-50);
-			}
-		});
-		layout.addView(seekBarX);
-
-		seekBarY = new SeekBar(this);
-		seekBarY.setMax(100);
-		seekBarY.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				trailView.setLookY((float)progress-50);
-			}
-		});
-		layout.addView(seekBarY);
-		
-		seekBarZ = new SeekBar(this);
-		seekBarZ.setMax(100);
-		seekBarZ.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				trailView.setLookZ((float)progress-50);
-			}
-		});
-		layout.addView(seekBarZ);
-		
-		seekBarUD = new SeekBar(this);
-		seekBarUD.setMax(100);
-		seekBarUD.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				trailView.setLookUD((float)progress-50);
-			}
-		});
-		layout.addView(seekBarUD);
-		
-		seekBarLR = new SeekBar(this);
-		seekBarLR.setMax(100);
-		seekBarLR.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				trailView.setLookLR((float)progress-50);
-			}
-		});
-		layout.addView(seekBarLR);
+		makeLookSeekBar(seekBarX, 100, 0, "from:X");
+		makeLookSeekBar(seekBarY, 100, 1, "from:Y");
+		makeLookSeekBar(seekBarZ, 100, 2, "from:Z");
+		makeLookSeekBar(seekBarLaX, 100, 3, "  at:X");
+		makeLookSeekBar(seekBarLaY, 100, 4, "  at:Y");
+		makeLookSeekBar(seekBarLaZ, 100, 5, "  at:Z");
 		
 		initSensor();
 	}
@@ -167,8 +124,6 @@ public class SensorTest extends Activity implements SensorEventListener {
 			this,
 			sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
 			SensorManager.SENSOR_DELAY_GAME);
-		thread = new Thread(task);
-		thread.start();
 
         // タイマーを作成する
         ses = Executors.newSingleThreadScheduledExecutor();
@@ -202,6 +157,43 @@ public class SensorTest extends Activity implements SensorEventListener {
 		});
 	}
 	
+	protected void makeLookSeekBar(SeekBar sb, final int max, final int tag, String name){
+		sb = new SeekBar(this);
+		sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				switch(tag){
+				case 0: trailView.setLookX((float)(progress-max*0.5)); break;
+				case 1: trailView.setLookY((float)(progress-max*0.5)); break;
+				case 2: trailView.setLookZ((float)(progress-max*0.5)); break;
+				case 3: trailView.setLaX((float)(progress-max*0.5)); break;
+				case 4: trailView.setLaY((float)(progress-max*0.5)); break;
+				case 5: trailView.setLaZ((float)(progress-max*0.5)); break;
+				}
+			}
+		});
+		sb.setMax(max);
+		sb.setProgress(max/2);
+		
+		TextView label = new TextView(this);
+		label.setText(name);
+		LinearLayout ll = new LinearLayout(this);
+		ll.setOrientation(LinearLayout.HORIZONTAL);
+		ll.setWeightSum(10);
+		LayoutParams lp1 = new LinearLayout.LayoutParams(
+	                    LinearLayout.LayoutParams.FILL_PARENT,
+	                    LinearLayout.LayoutParams.WRAP_CONTENT);
+		lp1.weight = 8;
+		ll.addView(label, lp1);
+		LayoutParams lp2 = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.FILL_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+		lp2.weight = 2;
+		ll.addView(sb, lp2);
+		layout.addView(ll);
+	}
+	
 	protected void initSensor(){
 		sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
 	}
@@ -230,7 +222,13 @@ public class SensorTest extends Activity implements SensorEventListener {
 			SensorManager.getOrientation(
 				rotationMatrix, 
 				attitude);
-			
+
+			/*
+			if(0.5*Math.PI < attitude[2] || attitude[2] < -0.5*Math.PI){
+				attitude[1] = (float)Math.PI - attitude[1];
+				Log.d("Pitch", ":"+attitude[1]);
+			}
+			*/
 		}
 	}
 }
