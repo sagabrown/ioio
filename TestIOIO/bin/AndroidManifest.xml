@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	android:versionCode="1" android:versionName="1.0" package="ioio.examples.test">
+	android:versionCode="1" android:versionName="1.0" package="ioio.robot">
 	<uses-sdk android:targetSdkVersion="10" android:minSdkVersion="3" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.BLUETOOTH" />
@@ -20,10 +20,10 @@
 			<meta-data android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
 				android:resource="@xml/accessory_filter" />
 		</activity>
-		<activity android:label="controller" android:name="MainActivity"
+		<activity android:label="controller" android:name=".controller.MainActivity"
 			 android:screenOrientation="portrait">
 		</activity>
-		<activity android:label="sensor_view" android:name="SensorTest"
+		<activity android:label="sensor_view" android:name=".sensor.SensorTest"
 			 android:screenOrientation="portrait">
 		</activity>
 	</application>
