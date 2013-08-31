@@ -26,6 +26,7 @@ public class TrailView extends GLSurfaceView {
 	private float azimuth, pitch, roll;
 	private float xf, yf, zf, xr, yr, zr;
     private float oldX1, oldY1, oldZ1;
+    private float oldX2, oldY2, oldZ2;
     private float lookX, lookY, lookZ;
     private float laX, laY, laZ;
     private int halfHeight = 200;
@@ -53,6 +54,7 @@ public class TrailView extends GLSurfaceView {
         tpList = new ArrayList<TrailPoint>();
         lastTp = new TrailPoint(0,0,0,0,0,0);
         oldX1 = oldY1 = oldZ1 = 0;
+        oldX2 = oldY2 = oldZ2 = 0;
         lookX = lookY = lookZ = 0f;
         
         setRenderer(new Renderer(){
@@ -357,7 +359,11 @@ public class TrailView extends GLSurfaceView {
         setMeasuredDimension(width,2*halfHeight);
     }
     
-    
+	
+    /** 
+     * @param x1,y1,z1 前方の単位ベクトル
+     * @param x2,y2,z2 右方の単位ベクトル
+     */
     public void addTp(float x1, float y1, float z1, float x2, float y2, float z2){
     	float x = lastTp.x + speed * (float)0.5*(oldX1+x1);
     	float y = lastTp.y + speed * (float)0.5*(oldY1+y1);
@@ -377,6 +383,9 @@ public class TrailView extends GLSurfaceView {
     	oldX1 = x1;
     	oldY1 = y1;
     	oldZ1 = z1;
+    	oldX2 = x2;
+    	oldY2 = y2;
+    	oldZ2 = z2;
     }
  
  

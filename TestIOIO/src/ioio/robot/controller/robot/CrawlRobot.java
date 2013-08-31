@@ -27,6 +27,7 @@ public class CrawlRobot implements Robot {
 	private LinearLayout layout;
 	private ToggleButton autoButton;
     private ScheduledExecutorService ses = null;
+    private boolean isActive;
 	
 	/** コンストラクタ **/
 	public CrawlRobot(Util util) {
@@ -52,7 +53,8 @@ public class CrawlRobot implements Robot {
 			m.init();
 		}
 	}
-	
+
+	@Override
 	/** ロボットの操作パネルを作って返す **/
 	public LinearLayout getLayout(MainActivity parent){
         // 親のアクティビティに動的レイアウトを作成する
@@ -70,7 +72,6 @@ public class CrawlRobot implements Robot {
         });
         layout.addView(autoButton);
         autoButton.setText("manual-controll");
-        autoButton.setEnabled(false);
         // モーターごとの操作パネルを登録
 		for(int i=0; i<motorNum; i++){
 	        layout.addView(motor[i].getOperationLayout(parent));
@@ -78,6 +79,7 @@ public class CrawlRobot implements Robot {
 		return layout;
 	}
 
+	@Override
 	/** ピンを開いて各モーターに対応させる **/
 	public int openPins(IOIO ioio, int startPin) throws ConnectionLostException{
 		int cnt = startPin;
@@ -88,27 +90,29 @@ public class CrawlRobot implements Robot {
 		return cnt;
 	}
 
+	@Override
 	/** onにする **/
 	public void activate() throws ConnectionLostException {
 		for(Motor m : motor){
 			m.activate();
 		}
-		util.setEnabled(autoButton, true);
+		isActive = true;
 	}
+	@Override
 	/** offにする **/
 	public void disactivate() throws ConnectionLostException {
 		for(Motor m : motor){
 			m.disactivate();
 		}
-		util.setEnabled(autoButton, false);
-		setAuto(false);
+		isActive = false;
 	}
+	@Override
 	/** 接続解除されたときの処理 **/
 	public void disconnected() throws ConnectionLostException {
 		for(Motor m : motor){
 			m.disconnected();
 		}
-		util.setEnabled(autoButton, false);
+		isActive = false;
 	}
 	
 
@@ -118,9 +122,14 @@ public class CrawlRobot implements Robot {
     private final Runnable autoControllTask = new Runnable(){
         @Override
         public void run() {
+        	if(!isActive)	return;
         	Log.d("autoControll", "running...");
-        	if(taskLoop[taskCnt] == 0)	goForward();
-        	else						goBackForward();
+			try {
+	        	if(taskLoop[taskCnt] == 0)	goForward();
+				else						goBackForward();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
         	
         	if(taskCnt==taskLoop.length-1)	taskCnt = 0;
         	else							taskCnt++;
@@ -129,9 +138,6 @@ public class CrawlRobot implements Robot {
 	
 	/** 全体を自動制御に切り替え **/
 	public void setAuto(boolean tf){
-		for(Motor m : motor){
-			m.setIsAutoControlled(tf);
-		}
 		if(tf){
 	        // タイマーを作成する
 	        ses = Executors.newSingleThreadScheduledExecutor();
@@ -142,16 +148,32 @@ public class CrawlRobot implements Robot {
 			// タイマーを停止する
 			ses.shutdown();
 			ses = null;
+			motor[0].changeState(0.0f);
+		}
+		for(Motor m : motor){
+			m.setIsAutoControlled(tf);
 		}
 	}
 
-	/** 進む **/
-	public void goForward(){
-		motor[0].changeState(0.8f);
+	/** 進む 
+	 * @throws InterruptedException **/
+	public void goForward() throws InterruptedException{
+		float state = (float)motor[0].getState();
+		float dd = 0.1f;
+		for(float s=state; s<1.0; s+=dd){
+			motor[0].changeState(s);
+			Thread.sleep(10);
+		}
 	}
-	/** 戻る **/
-	public void goBackForward(){
-		motor[0].changeState(-0.8f);
+	/** 戻る 
+	 * @throws InterruptedException **/
+	public void goBackForward() throws InterruptedException{
+		float state = (float)motor[0].getState();
+		float dd = 0.1f;
+		for(float s=state; s>-1.0; s-=dd){
+			motor[0].changeState(s);
+			Thread.sleep(10);
+		}
 	}
 	
 	

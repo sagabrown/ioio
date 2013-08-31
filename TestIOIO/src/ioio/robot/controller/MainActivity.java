@@ -108,7 +108,7 @@ public class MainActivity extends IOIOActivity {
 			} catch (ConnectionLostException e) {
 				e.printStackTrace();
 			}
-			//util.setEnabled(button_, false);
+			util.setEnabled(button_, false);
 			Log.d("debug", "disconnected!!!");
 		}
 	}

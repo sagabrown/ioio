@@ -64,7 +64,8 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 	private final Runnable task = new Runnable(){
 		public void run() {
 		    //Log.d(TAG, "running...");
-		    
+			
+		    // 生データをテキスト表示
 			util.setText(azimuthText, Integer.toString((int)(attitude[0] * RAD2DEG)));
 			util.setText(pitchText, Integer.toString((int)(attitude[1] * RAD2DEG)));
 			util.setText(rollText, Integer.toString((int)(attitude[2] * RAD2DEG)));
