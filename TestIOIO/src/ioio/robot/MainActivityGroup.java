@@ -31,9 +31,9 @@ public class MainActivityGroup extends ActivityGroup {
 	    
 	    activities = new ArrayList<Activity>();
 
+	    //setView(SensorTest.class, "SensorTest");
+	    //Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
 	    setView(MainActivity.class, "MainActivity");
-	    Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
-	    setView(SensorTest.class, "SensorTest");
 	    Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
     }
     

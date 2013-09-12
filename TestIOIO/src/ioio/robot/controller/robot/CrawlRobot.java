@@ -6,11 +6,13 @@ import java.util.concurrent.TimeUnit;
 
 
 
+import ioio.lib.api.DigitalInput;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.controller.MainActivity;
 import ioio.robot.controller.motor.DCMotor;
 import ioio.robot.controller.motor.Motor;
+import ioio.robot.sensor.SpeedMater;
 import ioio.robot.util.Util;
 import android.os.Handler;
 import android.util.Log;
@@ -22,8 +24,10 @@ import android.widget.ToggleButton;
 public class CrawlRobot implements Robot {
 	private Util util;
 	private Motor[] motor;
+	private SpeedMater speedMater;
 	private static double[] motorInitState = {0.5};  // 初期値
 	private int motorNum = motorInitState.length;
+	private int distPerCycle = 48;	// モーター1回転で進む距離[mm]
 	private LinearLayout layout;
 	private ToggleButton autoButton;
     private ScheduledExecutorService ses = null;
@@ -37,6 +41,7 @@ public class CrawlRobot implements Robot {
 	public CrawlRobot(Util util, double[] motorInitState) {
 		super();
 		this.util = util;
+		this.speedMater = new SpeedMater(util, distPerCycle);
 		int len = motorNum;
 		if(motorInitState.length < motorNum)	len = motorInitState.length;
 		for(int i=0; i<len; i++){
@@ -76,6 +81,9 @@ public class CrawlRobot implements Robot {
 		for(int i=0; i<motorNum; i++){
 	        layout.addView(motor[i].getOperationLayout(parent));
 		}
+		// スピードメータのパネルを登録
+		layout.addView(speedMater.getLayout(parent));
+		
 		return layout;
 	}
 
@@ -87,6 +95,9 @@ public class CrawlRobot implements Robot {
 		for(int i=0; i<motorNum; i++){
 			cnt += motor[i].openPin(ioio, cnt);
 		}
+		// スピードメータの入力ピン
+		speedMater.openPins(ioio, 4);
+		
 		return cnt;
 	}
 
@@ -96,6 +107,7 @@ public class CrawlRobot implements Robot {
 		for(Motor m : motor){
 			m.activate();
 		}
+		speedMater.activate();
 		isActive = true;
 	}
 	@Override
@@ -104,6 +116,7 @@ public class CrawlRobot implements Robot {
 		for(Motor m : motor){
 			m.disactivate();
 		}
+		speedMater.disactivate();
 		isActive = false;
 	}
 	@Override
@@ -112,6 +125,7 @@ public class CrawlRobot implements Robot {
 		for(Motor m : motor){
 			m.disconnected();
 		}
+		speedMater.disconnected();
 		isActive = false;
 	}
 	
