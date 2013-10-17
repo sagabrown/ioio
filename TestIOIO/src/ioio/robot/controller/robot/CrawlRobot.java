@@ -12,6 +12,10 @@ import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.controller.MainActivity;
 import ioio.robot.controller.motor.DCMotor;
 import ioio.robot.controller.motor.Motor;
+import ioio.robot.controller.motor.NE53070017;
+import ioio.robot.controller.motor.ServoMotor;
+import ioio.robot.light.FullColorLED;
+import ioio.robot.light.LED;
 import ioio.robot.sensor.SpeedMater;
 import ioio.robot.util.Util;
 import android.os.Handler;
@@ -21,12 +25,24 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
 import android.widget.ToggleButton;
 
+/**
+pin 1, 2	: i2cセンサ通信
+pin 3, 4	: DCモータ
+pin 5		: サーボモータ
+pin 6		: スピーカー
+pin 7		: 回転数入力
+pin 10-12	: LED
+**/
+
 public class CrawlRobot implements Robot {
 	private Util util;
 	private Motor[] motor;
+	private FullColorLED[] led;
 	private SpeedMater speedMater;
-	private static double[] motorInitState = {0.5};  // 初期値
+	private static double[] motorInitState = {0.5, 0.0};  // 初期値
+	private static float[] ledInitState = {0f};
 	private int motorNum = motorInitState.length;
+	private int ledNum = ledInitState.length;
 	private int distPerCycle = 48;	// モーター1回転で進む距離[mm]
 	private LinearLayout layout;
 	private ToggleButton autoButton;
@@ -50,13 +66,15 @@ public class CrawlRobot implements Robot {
 		init();
 	}
 
-	/** 初期速度を設定する **/
+	/** 初期設定 **/
 	private void init(){
 		motor = new Motor[motorNum];
 		motor[0] = new DCMotor(util, "くるま", motorInitState[0]);  // くるま
-		for( Motor m : motor ){
-			m.init();
-		}
+		motor[1] = new NE53070017(util, "耳", motorInitState[1]);	// 耳
+		for( Motor m : motor )	m.init();
+		led = new FullColorLED[ledNum];
+		led[0] = new FullColorLED(util, "目");
+		for( FullColorLED l : led )	l.init();
 	}
 
 	@Override
@@ -81,6 +99,10 @@ public class CrawlRobot implements Robot {
 		for(int i=0; i<motorNum; i++){
 	        layout.addView(motor[i].getOperationLayout(parent));
 		}
+        // LEDごとの操作パネルを登録
+		for(int i=0; i<ledNum; i++){
+	        layout.addView(led[i].getOperationLayout(parent));
+		}
 		// スピードメータのパネルを登録
 		layout.addView(speedMater.getLayout(parent));
 		
@@ -91,12 +113,21 @@ public class CrawlRobot implements Robot {
 	/** ピンを開いて各モーターに対応させる **/
 	public int openPins(IOIO ioio, int startPin) throws ConnectionLostException{
 		int cnt = startPin;
-        // ピンにモーターを対応させる
+		// 9軸センサの入力ピン(pin1,2)
+        // ピンにモーターを対応させる(pin3-5)
+		cnt = 3;
 		for(int i=0; i<motorNum; i++){
 			cnt += motor[i].openPin(ioio, cnt);
 		}
-		// スピードメータの入力ピン
-		speedMater.openPins(ioio, 4);
+		// スピーカー(pin6)
+		//ioio.openPwmOutput(6, 500).setDutyCycle(0.5f);
+		// スピードメータの入力ピン(pin7)
+		speedMater.openPins(ioio, 7);
+		// 目(pin10-12)
+		cnt = 10;
+		for(int i=0; i<ledNum; i++){
+			cnt += led[i].openPin(ioio, cnt);
+		}
 		
 		return cnt;
 	}
@@ -104,27 +135,24 @@ public class CrawlRobot implements Robot {
 	@Override
 	/** onにする **/
 	public void activate() throws ConnectionLostException {
-		for(Motor m : motor){
-			m.activate();
-		}
+		for(Motor m : motor)	m.activate();
+		for(FullColorLED l : led)	l.activate();
 		speedMater.activate();
 		isActive = true;
 	}
 	@Override
 	/** offにする **/
 	public void disactivate() throws ConnectionLostException {
-		for(Motor m : motor){
-			m.disactivate();
-		}
+		for(Motor m : motor)	m.disactivate();
+		for(FullColorLED l : led)	l.disactivate();
 		speedMater.disactivate();
 		isActive = false;
 	}
 	@Override
 	/** 接続解除されたときの処理 **/
 	public void disconnected() throws ConnectionLostException {
-		for(Motor m : motor){
-			m.disconnected();
-		}
+		for(Motor m : motor)	m.disconnected();
+		for(FullColorLED l : led)	l.disconnected();
 		speedMater.disconnected();
 		isActive = false;
 	}
@@ -164,9 +192,7 @@ public class CrawlRobot implements Robot {
 			ses = null;
 			motor[0].changeState(0.0f);
 		}
-		for(Motor m : motor){
-			m.setIsAutoControlled(tf);
-		}
+		for(Motor m : motor)	m.setIsAutoControlled(tf);
 	}
 
 	/** 進む 

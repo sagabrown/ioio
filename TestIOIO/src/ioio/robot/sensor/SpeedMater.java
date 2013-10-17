@@ -82,6 +82,7 @@ public class SpeedMater {
     public void disactivate(){
 		isActive = false;
 		// タイマーを停止する
+		if(ses == null)	return;
 		for(ScheduledExecutorService s : ses){
 			if(s != null){
 				s.shutdown();
@@ -92,7 +93,7 @@ public class SpeedMater {
     
     public void disconnected(){
 		disactivate();
-		cycleIn.close();
+		if(cycleIn != null)	cycleIn.close();
 		cycleIn = null;
     }
 	

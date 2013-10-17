@@ -37,7 +37,7 @@ public abstract class ServoMotor implements Motor {
 
 
 	/** コンストラクタ **/
-	public ServoMotor(Util util, double theta0, String name) {  // 初期角度を受け取る
+	public ServoMotor(Util util, String name, double theta0) {  // 初期角度を受け取る
 		this.util = util;
 		setSpec();
 		this.initState = (float)thetaToRatio(theta0);
@@ -79,7 +79,7 @@ public abstract class ServoMotor implements Motor {
 			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				changeState( (float) ratioToDuty((double)progress / seekBar.getMax()) );
+				changeState( (float) (double)progress / seekBar.getMax() );
 			}
 		});
 		util.setProgress(seekBar, (int)(getState() * seekBar.getMax()));
@@ -95,7 +95,7 @@ public abstract class ServoMotor implements Motor {
 	private void changeDuty(){
 		if(isActive && pin!=null){
 			try {
-				pin.setDutyCycle(state);
+				pin.setDutyCycle((float)ratioToDuty(state));
 			} catch (ConnectionLostException e) {
 				e.printStackTrace();
 			}

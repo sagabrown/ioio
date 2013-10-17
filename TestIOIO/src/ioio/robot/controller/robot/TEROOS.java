@@ -40,13 +40,13 @@ public class TEROOS implements Robot {
 	/* 初期角度を設定する */
 	private void init(){
 		motor = new Motor[motorNum];
-		motor[0] = new HS322HD(util, motorInitState[0], "首（ふる）");  // 首（振る）
-		motor[1] = new HS322HD(util, motorInitState[1], "目");  // 目
-		motor[2] = new BlueArrowBA_TS(util, motorInitState[2], "まぶた");  // まぶた
-		motor[3] = new HS322HD(util, motorInitState[3], "首（傾げる）");  // 首（傾げる）
-		motor[4] = new HS322HD(util, motorInitState[4], "頭");  // あたま
-		motor[5] = new HS322HD(util, motorInitState[5], "首（頷く）");  // 首（頷く）
-		motor[6] = new HS322HD(util, motorInitState[6], "<未使用>");  // <未使用>	
+		motor[0] = new HS322HD(util, "首（ふる）", motorInitState[0]);  // 首（振る）
+		motor[1] = new HS322HD(util, "目", motorInitState[1]);  // 目
+		motor[2] = new BlueArrowBA_TS(util, "まぶた", motorInitState[2]);  // まぶた
+		motor[3] = new HS322HD(util, "首（傾げる）", motorInitState[3]);  // 首（傾げる）
+		motor[4] = new HS322HD(util, "頭", motorInitState[4]);  // あたま
+		motor[5] = new HS322HD(util, "首（頷く）", motorInitState[5]);  // 首（頷く）
+		motor[6] = new HS322HD(util, "<未使用>", motorInitState[6]);  // <未使用>	
 	}
 	
 	/* 操作パネルを生成して返す */

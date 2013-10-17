@@ -4,8 +4,8 @@ import ioio.robot.util.Util;
 
 /** Blue Arrow BA-TS-3.6 のスペック・設定を保持するクラス **/
 public class BlueArrowBA_TS extends ServoMotor implements Motor {
-	public BlueArrowBA_TS(Util util, double theta0, String name) {
-		super(util, theta0, name);
+	public BlueArrowBA_TS(Util util, String name, double theta0) {
+		super(util, name, theta0);
 		setSpec();
 	}
 	
