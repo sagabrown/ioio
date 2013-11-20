@@ -12,10 +12,11 @@ import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.controller.MainActivity;
 import ioio.robot.controller.motor.DCMotor;
 import ioio.robot.controller.motor.Motor;
-import ioio.robot.controller.motor.NE53070017;
+import ioio.robot.controller.motor.SG90;
 import ioio.robot.controller.motor.ServoMotor;
 import ioio.robot.light.FullColorLED;
 import ioio.robot.light.LED;
+import ioio.robot.sensor.SensorTester;
 import ioio.robot.sensor.SpeedMater;
 import ioio.robot.util.Util;
 import android.os.Handler;
@@ -39,6 +40,7 @@ public class CrawlRobot implements Robot {
 	private Motor[] motor;
 	private FullColorLED[] led;
 	private SpeedMater speedMater;
+	private SensorTester sensor;
 	private static double[] motorInitState = {0.5, 0.0};  // 初期値
 	private static float[] ledInitState = {0f};
 	private int motorNum = motorInitState.length;
@@ -57,7 +59,6 @@ public class CrawlRobot implements Robot {
 	public CrawlRobot(Util util, double[] motorInitState) {
 		super();
 		this.util = util;
-		this.speedMater = new SpeedMater(util, distPerCycle);
 		int len = motorNum;
 		if(motorInitState.length < motorNum)	len = motorInitState.length;
 		for(int i=0; i<len; i++){
@@ -70,11 +71,14 @@ public class CrawlRobot implements Robot {
 	private void init(){
 		motor = new Motor[motorNum];
 		motor[0] = new DCMotor(util, "くるま", motorInitState[0]);  // くるま
-		motor[1] = new NE53070017(util, "耳", motorInitState[1]);	// 耳
+		motor[1] = new SG90(util, "耳", motorInitState[1]);	// 耳
 		for( Motor m : motor )	m.init();
 		led = new FullColorLED[ledNum];
 		led[0] = new FullColorLED(util, "目");
 		for( FullColorLED l : led )	l.init();
+		
+		this.speedMater = new SpeedMater(util, distPerCycle);
+		this.sensor = new SensorTester(util);
 	}
 
 	@Override
@@ -105,15 +109,18 @@ public class CrawlRobot implements Robot {
 		}
 		// スピードメータのパネルを登録
 		layout.addView(speedMater.getLayout(parent));
+		// センサーのパネルを登録
+		layout.addView(sensor.getLayout(parent));
 		
 		return layout;
 	}
 
 	@Override
 	/** ピンを開いて各モーターに対応させる **/
-	public int openPins(IOIO ioio, int startPin) throws ConnectionLostException{
+	public int openPins(IOIO ioio, int startPin) throws ConnectionLostException, InterruptedException{
 		int cnt = startPin;
 		// 9軸センサの入力ピン(pin1,2)
+		sensor.openPins(ioio, 1, 2);
         // ピンにモーターを対応させる(pin3-5)
 		cnt = 3;
 		for(int i=0; i<motorNum; i++){
@@ -138,6 +145,7 @@ public class CrawlRobot implements Robot {
 		for(Motor m : motor)	m.activate();
 		for(FullColorLED l : led)	l.activate();
 		speedMater.activate();
+		sensor.activate();
 		isActive = true;
 	}
 	@Override
@@ -146,6 +154,7 @@ public class CrawlRobot implements Robot {
 		for(Motor m : motor)	m.disactivate();
 		for(FullColorLED l : led)	l.disactivate();
 		speedMater.disactivate();
+		sensor.disactivate();
 		isActive = false;
 	}
 	@Override
@@ -154,6 +163,7 @@ public class CrawlRobot implements Robot {
 		for(Motor m : motor)	m.disconnected();
 		for(FullColorLED l : led)	l.disconnected();
 		speedMater.disconnected();
+		sensor.disconnected();
 		isActive = false;
 	}
 	

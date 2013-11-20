@@ -23,8 +23,5 @@
 		<activity android:label="controller" android:name=".controller.MainActivity"
 			 android:screenOrientation="portrait">
 		</activity>
-		<activity android:label="sensor_view" android:name=".sensor.SensorTest"
-			 android:screenOrientation="portrait">
-		</activity>
 	</application>
 </manifest>

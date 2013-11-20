@@ -7,7 +7,7 @@ import android.widget.LinearLayout;
 
 public interface Robot {
 	public LinearLayout getLayout(MainActivity parent);
-	public int openPins(IOIO ioio, int startPin) throws ConnectionLostException;
+	public int openPins(IOIO ioio, int startPin) throws ConnectionLostException, InterruptedException;
 	public void activate() throws ConnectionLostException;
 	public void disactivate() throws ConnectionLostException;
 	public void disconnected() throws ConnectionLostException;

@@ -33,8 +33,8 @@ public class MainActivityGroup extends ActivityGroup {
 
 	    setView(MainActivity.class, "MainActivity");
 	    Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
-	    setView(SensorTest.class, "SensorTest");
-	    Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
+	    //setView(SensorTest.class, "SensorTest");
+	    //Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
     }
     
     private void setView(Class<?> cls, String name){

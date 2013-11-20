@@ -46,7 +46,7 @@ public class NineDigreesOfFreedom {
     private byte[] writeBuffer = new byte[WRITE_BUFFER_SIZE];
     
 	// 初期化(接続するたびに呼び出す)
-	private void init(IOIO ioio) throws ConnectionLostException, InterruptedException{
+	public void init(IOIO ioio) throws ConnectionLostException, InterruptedException{
 		twi = ioio.openTwiMaster(1, TwiMaster.Rate.RATE_400KHz, false);
 		// MPU6050のスリープビット(107番レジスタのBit6)を0にして各機能を有効化
 		writeByte(MPU6050Address, (byte)107, (byte)0);
@@ -94,21 +94,24 @@ public class NineDigreesOfFreedom {
 		}
 	}
 	
-	// 地磁気の値を取得してgeometricに格納
-	public void getGeometric(int[] geometric) throws ConnectionLostException, InterruptedException{
+	// 地磁気の値を取得してgeomagneticに格納
+	public void getGeomagnetic(int[] geomagnetic) throws ConnectionLostException, InterruptedException{
+		// AK8975の10番レジスタに0x01を書き込みAD変換開始
+		writeByte(AK8975Address, (byte)10, (byte)0x01);
+		
 		// byteデータの読み込み
 		byte[] data = new byte[6];
 		read(AK8975Address, HXL, data.length, data);
 
 		// 上位ビットと下位ビットの結合
-		for(int i=0; i<geometric.length; i++)
-			geometric[i] = (data[i*2]<<8) | data[i*2+1];
+		for(int i=0; i<geomagnetic.length; i++)
+			geomagnetic[i] = (data[i*2]<<8) | data[i*2+1];
 	}
 	
-	// 加速度、ジャイロ、地磁気の値を取得してaccel, gyro, geometricに格納
-	public void getMotion9(int[] accel, int[] gyro, int[] geometric) throws ConnectionLostException, InterruptedException{
+	// 加速度、ジャイロ、地磁気の値を取得してaccel, gyro, geomagneticに格納
+	public void getMotion9(int[] accel, int[] gyro, int[] geomagnetic) throws ConnectionLostException, InterruptedException{
 		getAccelAndGyro(accel, gyro);
-		getGeometric(geometric);
+		getGeomagnetic(geomagnetic);
 	}
 	
 	
@@ -143,5 +146,12 @@ public class NineDigreesOfFreedom {
 	    int readSize = length;
 	    twi.writeRead(address, false, writeBuffer, writeSize, data, readSize);
     }
+
+	public void close() {
+		if(twi!=null){
+			twi.close();
+		}
+		twi = null;
+	}
     
 }

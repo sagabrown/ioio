@@ -74,11 +74,12 @@ public class MainActivity extends IOIOActivity {
 		 * 
 		 * @throws ConnectionLostException
 		 *             When IOIO connection is lost.
+		 * @throws InterruptedException 
 		 * 
 		 * @see ioio.lib.util.AbstractIOIOActivity.IOIOThread#setup()
 		 */
 		@Override
-		protected void setup() throws ConnectionLostException {
+		protected void setup() throws ConnectionLostException, InterruptedException {
 			led_ = ioio_.openDigitalOutput(0, true);	// ledライト
 			Log.d("debug", "open pins!!!");
 			robot_.openPins(ioio_, 1);					// ピンにモーターを対応させる
