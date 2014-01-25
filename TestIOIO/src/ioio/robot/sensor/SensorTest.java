@@ -19,6 +19,8 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
@@ -26,6 +28,7 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+import android.widget.Button;
 
 public class SensorTest extends Activity implements SensorEventListener, ShockSensorListener {
 	Util util;
@@ -41,6 +44,8 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 	float[] gravity = new float[3];
 	float[] geomagnetic = new float[3];
 	float[] attitude = new float[3];
+	float x1, y1, z1;
+	float x2, y2, z2;
 	
 	LinearLayout layout;
 	
@@ -51,9 +56,11 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 	TextView valueX;
 	TextView valueY;
 	TextView valueZ;
-	
+
 	ToggleButton logging;
+	Button clearButton, setButton;
 	TextView shockSensorLabel;
+	private boolean trailFixed;
 	private int shockCount;
 	
 	TrailView trailView;
@@ -71,8 +78,6 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 			util.setText(rollText, Integer.toString((int)(attitude[2] * RAD2DEG)));
 	
 			// íºåç¿ïWÇ…ïœä∑
-			float x1, y1, z1;
-			float x2, y2, z2;
 			double theta, phi;
 			// ëO
 			theta = Math.PI*0.5 + attitude[1];
@@ -89,9 +94,6 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 			x2 = (float)(Math.sin(theta) * Math.cos(phi));
 			y2 = (float)(Math.sin(theta) * Math.sin(phi));
 			z2 = (float)(Math.cos(theta));
-			
-			// TrailÇ…èÓïÒí«â¡
-			if(logging.isChecked())	trailView.addTp(x1,y1,z1,x2,y2,z2);
 
 			// åªç›ÇÃèÓïÒ
 			trailView.setNowData(attitude[0] * RAD2DEG, attitude[1] * RAD2DEG, attitude[2] * RAD2DEG,
@@ -104,6 +106,7 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 		super.onCreate(savedInstanceState);
 		util = new Util(new Handler());
 		trailView = new TrailView(this);
+		trailFixed = false;
 
 		setContentView(R.layout.sensor_view);
 		layout = (LinearLayout) findViewById(R.id.sensorLayout);
@@ -164,6 +167,26 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 				else			trailView.onPause();
 			}
 		});
+		clearButton = (Button)findViewById(R.id.clear);
+		clearButton.setOnClickListener(new OnClickListener(){
+			@Override
+			public void onClick(View arg0) {
+				trailView.clearTrail();
+				trailFixed = false;
+				logging.setChecked(false);
+				logging.setClickable(true);
+			}
+		});
+		setButton = (Button)findViewById(R.id.set);
+		setButton.setOnClickListener(new OnClickListener(){
+			@Override
+			public void onClick(View arg0) {
+				trailView.setTrail();
+				trailFixed = true;
+				logging.setChecked(false);
+				logging.setClickable(false);
+			}
+		});
 		shockSensorLabel = (TextView)findViewById(R.id.shockSensorLabel);
 		
 	}
@@ -209,6 +232,11 @@ public class SensorTest extends Activity implements SensorEventListener, ShockSe
 		sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
 		shockSensor = new ShockSensor();
 		shockSensor.addShockSensorListener(this);
+	}
+	
+	public void addTp(int count){
+		// TrailÇ…èÓïÒí«â¡
+		if(logging.isChecked())	trailView.addTp(count, true, x1,y1,z1,x2,y2,z2,attitude[0],attitude[1],attitude[2]);
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package ioio.robot.light;
 
+import android.content.Context;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -60,9 +61,10 @@ public abstract class LED {
 	}
 
 	/** 操作パネルを生成して返す **/
-	public LinearLayout getOperationLayout(MainActivity parent){
+	public LinearLayout getOperationLayout(Context parent){
 		layout = new LinearLayout(parent);
         layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(5, 1, 5, 1);
         /* シークバーを作成して登録　*/
 		seekBar = new SeekBar(parent);
 		

@@ -4,7 +4,9 @@ import ioio.lib.api.IOIO;
 import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.controller.MainActivity;
+import ioio.robot.sensor.SpeedMater;
 import ioio.robot.util.Util;
+import android.content.Context;
 import android.os.Handler;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -32,6 +34,8 @@ public class DCMotor implements Motor {
 	private LinearLayout layout;
 	private SeekBar seekBar;
 	private TextView label;
+	
+	private SpeedMater speedMater;
 	
 	
 	public DCMotor(Util util, String name) {
@@ -63,9 +67,10 @@ public class DCMotor implements Motor {
 	}
 
 	/** 操作パネルを生成して返す **/
-	public LinearLayout getOperationLayout(MainActivity parent){
+	public LinearLayout getOperationLayout(Context parent){
 		layout = new LinearLayout(parent);
         layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(10, 1, 10, 1);
         /* シークバーを作成して登録　*/
 		seekBar = new SeekBar(parent);
 		
@@ -101,12 +106,14 @@ public class DCMotor implements Motor {
 	private void changeDuty(){
 		if(isActive && pin1!=null && pin2!=null	){
 			try {
-				if(state < 0){
-					pin1.setDutyCycle(0);
-					pin2.setDutyCycle(-state);
-				}else{
+				if(state > 0){	// 前進
+					if(speedMater!=null)	speedMater.setFoward(true);
 					pin1.setDutyCycle(state);
 					pin2.setDutyCycle(0);
+				}else{			// 後退
+					if(speedMater!=null)	speedMater.setFoward(false);
+					pin1.setDutyCycle(0);
+					pin2.setDutyCycle(-state);
 				}
 			} catch (ConnectionLostException e) {
 				e.printStackTrace();
@@ -179,6 +186,13 @@ public class DCMotor implements Motor {
 	public void setIsAutoControlled(boolean isAutoControlled){
 		this.isAutoControlled = isAutoControlled;
 		if(isActive)	util.setEnabled(seekBar, !isAutoControlled);
+	}
+	public void setSpeedMater(SpeedMater speedMater) {
+		this.speedMater = speedMater;
+	}
+	@Override
+	public void changeStateByRad(float rad) {
+		// do nothing
 	}
 	
 }

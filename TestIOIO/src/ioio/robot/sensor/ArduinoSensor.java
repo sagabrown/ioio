@@ -21,25 +21,85 @@ public class ArduinoSensor {
 	private boolean isActive = false;
 	private final static String TAG = "ArduinoSensor";
 	
+	private boolean isReading;
+	
     
 	// 初期化(接続するたびに呼び出す)
-	public void init(IOIO ioio, int rx, int tx) throws ConnectionLostException{
+	public void init(IOIO ioio, int rx, int tx) throws ConnectionLostException, IOException{
 		// ピンを開く
 		uart = ioio.openUart(rx, tx, 9600, Uart.Parity.NONE, Uart.StopBits.ONE);
 	}
 	
-	public void getData(float[] attitude) throws IOException{
-		if(isActive){
+	public boolean getData(float[] attitude) throws IOException{
+		if(isActive && !isReading){
+			isReading = true;
+			/*
+			// データたまり過ぎのとき破棄して戻る
+			if(in.available() > 500){
+				isReading = false;
+				while(in.available()>0)	in.read();
+				return false;
+			}*/
+			// データ取得依頼
 			out.write(1);
+			Log.i(TAG, "Give me the data!!");
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			// ゴミデータを捨てる
+			String text;
+			long ct;
+			do{
+				// あまりにも長い間データが得られなかったらあきらめる
+				ct = System.currentTimeMillis();
+				while(in.available() <= 0){
+					try {
+						Thread.sleep(5);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					if(System.currentTimeMillis()-ct > 500){
+						isReading = false;
+						Log.i(TAG, "not avairable");
+						return false;
+					}
+				}
+				text = br.readLine();
+				Log.i(TAG, "trash: "+text);
+			}while(!text.equals("0"));
+			// データを読む
+			// あまりにも長い間データが得られなかったらあきらめる
+			ct = System.currentTimeMillis();
+			while(in.available() <= 0){
+				try {
+					Thread.sleep(5);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if(System.currentTimeMillis()-ct > 500){
+					isReading = false;
+					Log.i(TAG, "not avairable");
+					return false;
+				}
+			}
 			String readTextData = br.readLine();
+			Log.i(TAG, "read data: "+readTextData);
+			isReading = false;
+			// 値を取り出してattitudeに格納
 			String[] attitudeText = readTextData.split(",");
-			if(attitudeText.length != 3)	return;
+			if(attitudeText.length != 3){
+				isReading = false;
+				return false;
+			}
 			for(int i=0; i<attitude.length; i++){
 				attitude[i] = Float.valueOf(attitudeText[i]);
-				Log.i(TAG , i+": "+attitude[i]);
 			}
+			//Log.i(TAG , "x: "+attitude[0]+", y: "+attitude[1]+", z: "+attitude[2]);
+			return true;
 		}
-		return;
+		return false;
 	}
 	
 	public void activate(){
@@ -51,15 +111,15 @@ public class ArduinoSensor {
 		br = new BufferedReader(isr);
 	}
 	
-	public void disactivate(){
-		isActive = true;
-		in = null;
-		out = null;
+	public void disactivate() throws IOException{
+		isActive = false;
+		//if(in!=null)	in.close();
+		//if(out!=null)	out.close();
 		isr = null;
 		br = null;
 	}
 	
-	public void disconnected(){
+	public void disconnected() throws IOException{
 		disactivate();
 		close();
 	}

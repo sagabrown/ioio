@@ -5,6 +5,7 @@ import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.controller.MainActivity;
 import ioio.robot.util.Util;
+import android.content.Context;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -19,6 +20,8 @@ public abstract class ServoMotor implements Motor {
 	protected double maxSpeed;				// dig/msec * rad/dig = rad/msec
 	protected double minTheta;				// モーターの最小回転角度. rad
 	protected double maxTheta;				// モーターの最大回転角度. rad
+	protected double minThetaLimit;				// モーターの最小制限回転角度. rad
+	protected double maxThetaLimit;				// モーターの最大制限回転角度. rad
 	protected int minPulseRanging;			// 可動な領域で最小のパルス幅. μsec
 	protected int maxPulseRanging;			// 可動な領域で最大のパルス幅. μsec
 	protected int freq;	// pwmピンの適切な周波数. minDuty~maxDutyが大体0~1になるよう定めておく. Hz
@@ -51,6 +54,8 @@ public abstract class ServoMotor implements Motor {
 	maxSpeed = Math.PI;					// dig/msec * rad/dig = rad/msec
 	minTheta = -Math.PI;				// モーターの最小回転角度. rad
 	maxTheta = Math.PI;					// モーターの最大回転角度. rad
+	minThetaLimit = -Math.PI;				// モーターの最小制限回転角度. rad
+	maxThetaLimit = Math.PI;				// モーターの最大制限回転角度. rad
 	minPulseRanging = 1;				// 可動な領域で最小のパルス幅. μsec
 	maxPulseRanging = 1000;				// 可動な領域で最大のパルス幅. μsec
 	freq = 1000;	// pwmピンの適切な周波数. minDuty~maxDutyが大体0~1になるよう定めておく. Hz
@@ -65,12 +70,13 @@ public abstract class ServoMotor implements Motor {
 	}
 	
 	/** 操作パネルを生成して返す **/
-	public LinearLayout getOperationLayout(MainActivity parent){
+	public LinearLayout getOperationLayout(Context parent){
 		layout = new LinearLayout(parent);
         layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(10, 1, 10, 1);
 		
 		label = new TextView(parent);
-		util.setText(label, name+"("+radToDeg(minTheta)+" ~ "+radToDeg(maxTheta)+")"+": "+radToDeg(ratioToTheta(state)));
+		util.setText(label, name+"("+radToDeg(minThetaLimit)+" ~ "+radToDeg(maxThetaLimit)+")"+": "+radToDeg(ratioToTheta(state)));
 		
         /* シークバーを作成して登録　*/
 		seekBar = new SeekBar(parent);
@@ -106,8 +112,12 @@ public abstract class ServoMotor implements Motor {
 	public void changeState(float state){
 		this.state = state;
 		changeDuty();	// pwm値の変更
-		util.setText(label, name+"("+radToDeg(minTheta)+" ~ "+radToDeg(maxTheta)+")"+": "+radToDeg(ratioToTheta(state)));
+		util.setText(label, name+"("+radToDeg(minThetaLimit)+" ~ "+radToDeg(maxThetaLimit)+")"+": "+radToDeg(ratioToTheta(state)));
 		//if(isAutoControlled)	seekBar.setProgress((int)((state+1.0)*seekBar.getMax()*0.5));
+	}
+	/** radからstateを変更する **/
+	public void changeStateByRad(float rad){
+		changeState((float)thetaToRatio(rad));
 	}
 	
 	public void activate() throws ConnectionLostException {
@@ -141,6 +151,7 @@ public abstract class ServoMotor implements Motor {
 
 	/** シークバーの比率(0~1)に対して, デューティー比を返す **/
 	public double ratioToDuty(double ratio){
+		ratio = thetaToRatio(ratioToTheta(ratio));
 		if( ratio < 0){
 			return minDuty;
 		}else if( 1 < ratio ){
@@ -152,12 +163,24 @@ public abstract class ServoMotor implements Motor {
 	
 	/** 角度(rad)を比率(0~1)に変換 **/
 	private double thetaToRatio(double theta){
-		return (theta-getMinTheta()) / (getMaxTheta()-getMinTheta());
+		if(theta < minThetaLimit){
+			return minThetaLimit;
+		}else if(theta > maxThetaLimit){
+			return maxThetaLimit;
+		}else{
+			return (theta-minTheta) / (maxTheta-minTheta);
+		}
 	}
 	
 	/** 比率(0~1)を角度(rad)に変換 **/
 	private double ratioToTheta(double ratio){
-		return getMinTheta() + ratio * (getMaxTheta()-getMinTheta());
+		if( ratio < 0){
+			return minThetaLimit;
+		}else if( 1 < ratio ){
+			return maxThetaLimit;
+		}else{
+			return minThetaLimit + ratio * (maxThetaLimit-minThetaLimit);
+		}
 	}
 	
 	/** radをdigに変換 **/
@@ -170,10 +193,10 @@ public abstract class ServoMotor implements Motor {
 		return freq;
 	}
 	public double getMinTheta() {
-		return minTheta;
+		return minThetaLimit;
 	}
 	public double getMaxTheta() {
-		return maxTheta;
+		return maxThetaLimit;
 	}
 	public double getState() {
 		return state;

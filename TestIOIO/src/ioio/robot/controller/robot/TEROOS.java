@@ -7,6 +7,7 @@ import ioio.robot.controller.motor.BlueArrowBA_TS;
 import ioio.robot.controller.motor.HS322HD;
 import ioio.robot.controller.motor.Motor;
 import ioio.robot.util.Util;
+import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.LinearLayout;
@@ -50,7 +51,7 @@ public class TEROOS implements Robot {
 	}
 	
 	/* 操作パネルを生成して返す */
-	public LinearLayout getLayout(MainActivity parent){
+	public LinearLayout getLayout(Context parent){
         /* 親のアクティビティに動的レイアウトを作成する　*/
         layout = new LinearLayout(parent);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -93,6 +94,20 @@ public class TEROOS implements Robot {
 	
 	public double[] getMotorInitState() {
 		return motorInitState;
+	}
+	@Override
+	public void setSpeed(float speed) {
+		// do nothing
+	}
+	@Override
+	public void incCount() {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void decCount() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

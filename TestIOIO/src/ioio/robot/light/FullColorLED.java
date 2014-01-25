@@ -1,5 +1,6 @@
 package ioio.robot.light;
 
+import android.content.Context;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -16,6 +17,8 @@ public class FullColorLED {
 
 	private LinearLayout layout, line1, line2;
 	private Button[] colorButton;
+	private float[] color;
+	private float luminous;
 	private TextView label;
 	
 	private Util util;
@@ -44,9 +47,10 @@ public class FullColorLED {
 	}
 
 	/** 操作パネルを生成して返す **/
-	public LinearLayout getOperationLayout(MainActivity parent){
+	public LinearLayout getOperationLayout(Context parent){
 		layout = new LinearLayout(parent);
         layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(10, 1, 10, 1);
         
 		label = new TextView(parent);
 		util.setText(label, name);
@@ -63,29 +67,30 @@ public class FullColorLED {
 		for(int i=0; i<colorButton.length; i++){
 			colorButton[i] = new Button(parent);
 			line1.addView(colorButton[i], lp);
+			util.setEnabled(colorButton[i], false);
 		}
-		colorButton[0].setText("赤");
+		colorButton[0].setText("red");
         colorButton[0].setOnClickListener(new Button.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				red();
 			}
         });
-		colorButton[1].setText("緑");
+		colorButton[1].setText("green");
         colorButton[1].setOnClickListener(new Button.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				green();
 			}
         });
-		colorButton[2].setText("青");
+		colorButton[2].setText("blue");
         colorButton[2].setOnClickListener(new Button.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				blue();
 			}
         });
-		colorButton[3].setText("無");
+		colorButton[3].setText("off");
         colorButton[3].setOnClickListener(new Button.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -96,51 +101,64 @@ public class FullColorLED {
         /* 子のシークバーを作成して登録　*/
 		line2 = new LinearLayout(parent);
         line2.setOrientation(LinearLayout.HORIZONTAL);
-        line1.setWeightSum(3);
+        line2.setWeightSum(3);
 		for(LED l : led)	line2.addView(l.getOperationLayout(parent), lp);
 		
-		layout.addView(line1);
 		layout.addView(line2);
+		layout.addView(line1);
         
 		return layout;
 	}
 	
 	/** ワンタッチ・赤 **/
-	private void red(){
-		led[0].changeState(1f, false);
-		led[1].changeState(0f, false);
-		led[2].changeState(0f, false);
+	public void red(){
+		float[] clr = {1f, 0f, 0f};
+		setColor(clr);
+		setLuminous(1f);
 	}
 	/** ワンタッチ・緑 **/
-	private void green(){
-		led[0].changeState(0f, false);
-		led[1].changeState(1f, false);
-		led[2].changeState(0f, false);
+	public void green(){
+		float[] clr = {0f, 1f, 0f};
+		setColor(clr);
+		setLuminous(1f);
 	}
 	/** ワンタッチ・青 **/
-	private void blue(){
-		led[0].changeState(0f, false);
-		led[1].changeState(0f, false);
-		led[2].changeState(1f, false);
+	public void blue(){
+		float[] clr = {0f, 0f, 1f};
+		setColor(clr);
+		setLuminous(1f);
 	}
 	/** ワンタッチ・オフ **/
-	private void off(){
-		led[0].changeState(0f, false);
-		led[1].changeState(0f, false);
-		led[2].changeState(0f, false);
+	public void off(){
+		float[] clr = {0f, 0f, 0f};
+		setColor(clr);
+		setLuminous(0f);
+	}
+	/** 任意の色に設定 **/
+	public void setColor(float[] clr){
+		if(clr.length < 3)	return;
+		for(int i=0; i<3; i++)	color[i] = clr[i];
+		for(int i=0; i<3; i++)	led[i].changeState(color[i]*luminous, false);
+	}
+	/** 光の強さを設定 **/
+	public void setLuminous(float lum){
+		luminous = lum;
+		for(int i=0; i<3; i++)	led[i].changeState(color[i]*luminous, false);
 	}
 	
 	public void activate() throws ConnectionLostException {
 		isActive = true;
+		for(Button b : colorButton)	util.setEnabled(b, true);
 		for(LED l : led)	l.activate();
 	}
 	public void disactivate() throws ConnectionLostException {
 		isActive = false;
+		for(Button b : colorButton)	util.setEnabled(b, false);
 		for(LED l : led)	l.disactivate();
 	}
-	
 	public void disconnected() throws ConnectionLostException {
 		isActive = false;
+		for(Button b : colorButton)	util.setEnabled(b, false);
 		for(LED l : led)	l.disconnected();
 	}
 
