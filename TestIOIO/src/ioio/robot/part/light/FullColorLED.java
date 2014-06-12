@@ -8,10 +8,10 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.activity.MainActivity;
+import ioio.robot.part.PinOpenable;
 import ioio.robot.util.Util;
 
-public class FullColorLED {
+public class FullColorLED implements PinOpenable {
 	private LED[] led;
 	private boolean isActive;
 
@@ -23,10 +23,12 @@ public class FullColorLED {
 	
 	private Util util;
 	private String name;
+	private boolean isAutoControlled;
 	
 	public FullColorLED(Util util, String name) {
 		this.util = util;
 		this.name = name;
+		color = new float[3];
 		led = new LED[3];
 		led[0] = new LED_R(util, "R");	// R
 		led[1] = new LED_G(util, "G");	// G
@@ -40,10 +42,14 @@ public class FullColorLED {
 		isActive = false;
 	}
 
-	/** 受け取った番号のピンを開いて対応づける(開いたピンの数1を返す) **/
-	public int openPin(IOIO ioio, int num) throws ConnectionLostException{
-		for(LED l : led)	num += l.openPin(ioio, num);
-		return 3;
+	/** 受け取った番号のピンを開いて対応づける **/
+	public boolean openPins(IOIO ioio, int[] nums) throws ConnectionLostException{
+		for(int i=0; i<led.length; i++){
+			int[] num = new int[1];
+			num[0] = nums[i];
+			if( !led[i].openPins(ioio, num) )	return false;
+		}
+		return true;
 	}
 
 	/** 操作パネルを生成して返す **/
@@ -160,6 +166,12 @@ public class FullColorLED {
 		isActive = false;
 		for(Button b : colorButton)	util.setEnabled(b, false);
 		for(LED l : led)	l.disconnected();
+	}
+
+	public void setIsAutoControlled(boolean isAutoControlled){
+		this.isAutoControlled = isAutoControlled;
+		for(LED l : led)	l.setIsAutoControlled(isAutoControlled);
+		if(isActive)	for(Button b : colorButton)	util.setEnabled(b, !isAutoControlled);
 	}
 
 }

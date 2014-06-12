@@ -3,7 +3,7 @@ package ioio.robot.part.motor;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.activity.MainActivity;
+import ioio.robot.MainActivity;
 import ioio.robot.util.Util;
 import android.content.Context;
 import android.util.Log;
@@ -14,6 +14,7 @@ import android.widget.TextView;
 /** モーターのスペック・設定からデューティー比を計算するクラス **/
 public abstract class ServoMotor implements Motor {
 	private Util util;
+	private final static String TAG = "ServoMotor";
 	
 	protected static final int pinNum = 1;	// 必要なピンの数
 	protected PwmOutput pin;				// 対応しているピン
@@ -137,11 +138,15 @@ public abstract class ServoMotor implements Motor {
 		util.setEnabled(seekBar, false);
 	}
 	
-	/** 受け取った番号からpinNumぶんのピンを開いて対応づける(開いたピンの数を返す) **/
-	public int openPin(IOIO ioio, int num) throws ConnectionLostException{
-		pin = ioio.openPwmOutput(num, getFreq());
+	/** 受け取った番号のピンを開いて対応づける **/
+	public boolean openPins(IOIO ioio, int[] nums) throws ConnectionLostException{
+		if(nums.length != pinNum){
+			Log.e(TAG, "cannot open pin: Ellegal pinNum");
+			return false;
+		}
+		pin = ioio.openPwmOutput(nums[0], getFreq());
 		changeDuty();
-		return pinNum;
+		return true;
 	}
 	
 	/** 動かしたい角度(rad)に対して, デューティー比を返す **/

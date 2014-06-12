@@ -1,4 +1,4 @@
-package ioio.robot.activity;
+package ioio.robot;
 
 import ioio.robot.R;
 import ioio.robot.robot.CrawlRobot;

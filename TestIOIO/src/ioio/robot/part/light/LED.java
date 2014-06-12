@@ -1,17 +1,20 @@
 package ioio.robot.part.light;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.activity.MainActivity;
+import ioio.robot.MainActivity;
+import ioio.robot.part.PinOpenable;
 import ioio.robot.util.Util;
 
-public abstract class LED {
+public abstract class LED implements PinOpenable {
 	private PwmOutput pin;
+	protected static final int pinNum = 1;	// 必要なピンの数
 	protected int minPulseRanging;			// 可動な領域で最小のパルス幅. μsec
 	protected int maxPulseRanging;			// 可動な領域で最大のパルス幅. μsec
 	protected int freq;	// pwmピンの適切な周波数. minDuty~maxDutyが大体0~1になるよう定めておく. Hz
@@ -26,7 +29,9 @@ public abstract class LED {
 	private TextView label;
 	
 	private Util util;
+	private final static String TAG = "LED";
 	private String name;
+	private boolean isAutoControlled;
 	
 	public LED(Util util, String name) {
 		this.util = util;
@@ -54,10 +59,14 @@ public abstract class LED {
 	}
 
 	/** 受け取った番号のピンを開いて対応づける(開いたピンの数1を返す) **/
-	public int openPin(IOIO ioio, int num) throws ConnectionLostException{
-		pin = ioio.openPwmOutput(num, freq);
+	public boolean openPins(IOIO ioio, int[] nums) throws ConnectionLostException{
+		if(nums.length != pinNum){
+			Log.e(TAG, "cannot open pin: Ellegal pinNum");
+			return false;
+		}
+		pin = ioio.openPwmOutput(nums[0], freq);
 		changeDuty();
-		return 1;
+		return true;
 	}
 
 	/** 操作パネルを生成して返す **/
@@ -123,6 +132,11 @@ public abstract class LED {
 	}
 	public double getState() {
 		return state;
+	}
+
+	public void setIsAutoControlled(boolean isAutoControlled){
+		this.isAutoControlled = isAutoControlled;
+		if(isActive)	util.setEnabled(seekBar, !isAutoControlled);
 	}
 
 }

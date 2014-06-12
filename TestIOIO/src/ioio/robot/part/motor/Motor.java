@@ -1,21 +1,15 @@
 package ioio.robot.part.motor;
 
-import ioio.lib.api.IOIO;
-import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.activity.MainActivity;
+import ioio.robot.part.PinOpenable;
 import android.content.Context;
 import android.widget.LinearLayout;
 
-public interface Motor {
+public interface Motor extends PinOpenable {
 	public void setSpec();
 	public void init();
 	public double thetaToDuty(double theta);
 	public double ratioToDuty(double ratio);
 	public LinearLayout getOperationLayout(Context parent);
-	public int openPin(IOIO ioio, int num) throws ConnectionLostException;
-	public void activate() throws ConnectionLostException;
-	public void disactivate() throws ConnectionLostException;
-	public void disconnected() throws ConnectionLostException;
 	public int getFreq();
 	public double getMinTheta();
 	public double getMaxTheta();

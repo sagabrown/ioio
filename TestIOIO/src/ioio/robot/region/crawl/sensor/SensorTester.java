@@ -280,7 +280,7 @@ public class SensorTester {
 				trailView.onResume();
 				isLogging = true;
 				try {
-					parent.goForward();
+					parent.wheel.goForward();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -298,7 +298,7 @@ public class SensorTester {
 				stopButton.setEnabled(false);
 				trailView.onPause();
 				isLogging = false;
-				parent.stop();
+				parent.wheel.stop();
 			}
 		});
 		buttonLayout.addView(stopButton);
@@ -344,7 +344,7 @@ public class SensorTester {
 	
 	
 	public void openPins(IOIO ioio, int pinNum1, int pinNum2) throws ConnectionLostException, InterruptedException, IOException{
-		sensorModule.init(ioio, pinNum1, pinNum2);
+		sensorModule.openPins(ioio, pinNum1, pinNum2);
 	}
 
 	public void activate() throws ConnectionLostException {
@@ -366,11 +366,7 @@ public class SensorTester {
 		Log.i(TAG, "disactivate");
 		isActive = false;
 		sensorInited = false;
-		try {
-			sensorModule.disactivate();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		sensorModule.disactivate();
 		// タイマーを停止する
 		if(ses == null)	return;
 		for(ScheduledExecutorService s : ses){
@@ -383,11 +379,7 @@ public class SensorTester {
 	public void disconnected() throws ConnectionLostException {
 		isActive = false;
 		disactivate();
-		try {
-			sensorModule.disconnected();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		sensorModule.disconnected();
 	}
 
 	public void incCount(){

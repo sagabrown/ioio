@@ -7,10 +7,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 import android.util.Log;
-
 import ioio.lib.api.IOIO;
 import ioio.lib.api.Uart;
 import ioio.lib.api.exception.ConnectionLostException;
+import ioio.robot.part.PinOpenable;
 
 public class ArduinoSensor {
 	private Uart uart;
@@ -25,9 +25,10 @@ public class ArduinoSensor {
 	
     
 	// èâä˙âª(ê⁄ë±Ç∑ÇÈÇΩÇ—Ç…åƒÇ—èoÇ∑)
-	public void init(IOIO ioio, int rx, int tx) throws ConnectionLostException, IOException{
+	public int openPins(IOIO ioio, int rx, int tx) throws ConnectionLostException {
 		// ÉsÉìÇäJÇ≠
 		uart = ioio.openUart(rx, tx, 9600, Uart.Parity.NONE, Uart.StopBits.ONE);
+		return 2;
 	}
 	
 	public boolean getData(float[] attitude) throws IOException{
@@ -111,7 +112,7 @@ public class ArduinoSensor {
 		br = new BufferedReader(isr);
 	}
 	
-	public void disactivate() throws IOException{
+	public void disactivate(){
 		isActive = false;
 		//if(in!=null)	in.close();
 		//if(out!=null)	out.close();
@@ -119,7 +120,7 @@ public class ArduinoSensor {
 		br = null;
 	}
 	
-	public void disconnected() throws IOException{
+	public void disconnected(){
 		disactivate();
 		close();
 	}

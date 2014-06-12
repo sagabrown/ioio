@@ -1,20 +1,9 @@
-package ioio.robot.activity;
+package ioio.robot;
 
 import ioio.robot.R;
-import ioio.robot.R.id;
-import ioio.robot.R.layout;
 
 import java.util.ArrayList;
 
-
-
-
-
-
-
-
-
-import trash.SensorTest;
 import android.app.Activity;
 import android.app.ActivityGroup;
 import android.app.LocalActivityManager;
@@ -39,7 +28,7 @@ public class MainActivityGroup extends ActivityGroup {
 	    activities = new ArrayList<Activity>();
 
 	    setView(MainActivity.class, "MainActivity");
-	    Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
+	    //Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
 	    //setView(SensorTest.class, "SensorTest");
 	    //Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
     }

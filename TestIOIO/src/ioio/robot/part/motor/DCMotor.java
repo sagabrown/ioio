@@ -3,11 +3,12 @@ package ioio.robot.part.motor;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.PwmOutput;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.activity.MainActivity;
+import ioio.robot.MainActivity;
 import ioio.robot.region.crawl.sensor.SpeedMater;
 import ioio.robot.util.Util;
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 /** モーターのスペック・設定からデューティー比を計算するクラス **/
 public class DCMotor implements Motor {
 	private Util util;
+	private final static String TAG = "DCMotor";
 	
 	protected static final int pinNum = 2;	// 必要なピンの数
 	protected PwmOutput pin1, pin2;	// 対応しているピン
@@ -93,13 +95,17 @@ public class DCMotor implements Motor {
 		return layout;
 	}
 	
-	/** 受け取った番号からpinNumぶんのピンを開いて対応づける(開いたピンの数を返す) **/
-	public int openPin(IOIO ioio, int num) throws ConnectionLostException{
-		pin1 = ioio.openPwmOutput(num, getFreq());
-		pin2 = ioio.openPwmOutput(num+1, getFreq());
+	/** 受け取った番号のピンを開いて対応づける **/
+	public boolean openPins(IOIO ioio, int[] nums) throws ConnectionLostException{
+		if(nums.length != pinNum){
+			Log.e(TAG, "cannot open pin: Ellegal pinNum");
+			return false;
+		}
+		pin1 = ioio.openPwmOutput(nums[0], getFreq());
+		pin2 = ioio.openPwmOutput(nums[1], getFreq());
 		changeDuty();
 		util.setText(label, name+": "+state);
-		return pinNum;
+		return true;
 	}
 	
 	/** pwm値を変える **/

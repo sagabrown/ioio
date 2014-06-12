@@ -2,7 +2,7 @@ package ioio.robot.robot;
 
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.activity.MainActivity;
+import ioio.robot.MainActivity;
 import android.content.Context;
 import android.widget.LinearLayout;
 

@@ -2,7 +2,7 @@ package ioio.robot.robot;
 
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.activity.MainActivity;
+import ioio.robot.MainActivity;
 import ioio.robot.part.motor.BlueArrowBA_TS;
 import ioio.robot.part.motor.HS322HD;
 import ioio.robot.part.motor.Motor;
@@ -67,7 +67,10 @@ public class TEROOS implements Robot {
 		int cnt = startPin;
         // ピンにモーターを対応させる
 		for(int i=0; i<motorNum; i++){
-			cnt += motor[i].openPin(ioio, cnt);
+			int[] num = new int[1];
+			num[0] = cnt;
+			motor[i].openPins(ioio, num);
+			cnt += 1;
 		}
 		return cnt;
 	}
