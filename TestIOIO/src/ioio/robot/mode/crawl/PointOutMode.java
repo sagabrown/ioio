@@ -25,7 +25,7 @@ public class PointOutMode extends AutoMode {
 	private Ears ears;
 	private Eyes eyes;
 	private SensorTester sensor;
-	private TrailPoint shoulder, back, leg;	// 代表点
+	private int shoulder, back, leg;	// 代表点のインデックス
 	
 	public PointOutMode() {
 		button = null;
@@ -117,21 +117,24 @@ public class PointOutMode extends AutoMode {
         	int tpType = sensor.getNowTpType();
         	
         	if(isPointingOutSlouching){			// 猫背指摘モード
-        		if(!isShouching()){	// 解消されたとき
-        			isPointingOutSlouching = false;
-        			goalReached = false;
-        			goal = shoulderCenter;
-        		}
-        		if(goalReached){	// 目的地点についた
-        			
-        		}else{				// 目的地点到達前
-        			
+        		if(!isSlouching()){	// 解消されたとき
+        			endPointingOut();
+        		}else{
+	        		if(goalReached){	// 目的地点についた
+	        			// 前後移動
+	        		}else{				// 目的地点到達前
+	        			toGoal();
+	        		}
         		}
         	}else if(isPointingOutKneeShaking){	// 貧乏揺すり指摘モード
-        		if(goalReached){	// 目的地点についた
-        			
-        		}else{				// 目的地点到達前
-        			
+        		if(!isKneeShaking()){	// 解消されたとき
+        			endPointingOut();
+        		}else{
+        			if(goalReached){	// 目的地点についた
+        				// わちゃわちゃ
+	        		}else{				// 目的地点到達前
+	        			toGoal();
+	        		}
         		}
         	}else{								// 平常時
 	        	switch(tpType){
@@ -148,70 +151,55 @@ public class PointOutMode extends AutoMode {
 	        		if(isKneeShaking()){
 	        			startPointOutKneeShaking();
 	        		}else{
-	        			
+	        			robot.stand();
 	        		}
 	        	}
         	}
-        	
-        	
-        	// 角度の変化を耳で示す
-        	ears.changeStateByRad(dif);
-        	// 位置の違いを目で示す
-        	switch(sensor.getNowTpType()){
-        	case TrailPoint.NO_TYPE:
-        		eyes.setColor(TrailView.NO_TYPE_COLOR);
-        		break;
-        	case TrailPoint.BACK:
-        		eyes.setColor(TrailView.BACK_COLOR);
-        		break;
-        	case TrailPoint.SHOLDER:
-        		eyes.setColor(TrailView.SHOLDER_COLOR);
-        		break;
-        	case TrailPoint.ARM:
-        		eyes.setColor(TrailView.ARM_COLOR);
-        		break;
-        	}
-        	// 判定結果を目の点滅で示す
-        	if(Math.abs(dif) > 45*Math.PI && ses != null){
-        		if(ses[1] == null){
-        	        // タイマーを作成する
-        	        ses[1] = Executors.newSingleThreadScheduledExecutor();
-        		}
-    	        // 500msごとにtaskを実行する
-    	        Log.i(TAG, "eyesFlickStarted");
-	        ses[1].scheduleAtFixedRate(eyesTask, 0L, 500L, TimeUnit.MILLISECONDS);	
-        	}else{
-        		if(!ses[1].isShutdown())	ses[0].shutdown();
-        	}
         }
 
-        
-        @Override
-        protected void finalize() throws Throwable {
-			if(ses != null){
-				// タイマーを停止する
-				ses[1].shutdown();
-			}
-        	super.finalize();
-        }
+		// 貧乏揺すりしてる？
+		private boolean isKneeShaking() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		// 猫背？
+		private boolean isSlouching() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+		
+        // 目標値点へ
+		private void toGoal() {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		// 指摘の終了
+		private void endPointingOut() {
+			isPointingOutSlouching = false;
+			isPointingOutKneeShaking = false;
+			goalReached = false;
+			goal = shoulder;
+			robot.stand();
+		}
+		
+		// 猫背指摘の開始
+		private void startPointOutSlouching() {
+			isPointingOutSlouching = true;
+			goalReached = false;
+			goal = back;
+			robot.angry();
+		}
+		
+		// 貧乏揺すり指摘の開始
+		private void startPointOutKneeShaking() {
+			isPointingOutKneeShaking = true;
+			goalReached = false;
+			goal = leg;
+			robot.angry();
+		}
     };
     
-
-    /** 目の点滅タスク **/
-    private final Runnable eyesTask = new Runnable(){
-    	private int[] taskLoopFlickFast = {1,0,1,0,1,0,1,0,1,0,1,0};
-    	private int[] taskLoopFlickSlow = {1,1,0,0,1,1,0,0,1,1,0,0};
-    	private int taskCnt = 0;
-        @Override
-        public void run() {
-        	if(!isAuto)	return;
-        	Log.d("eyeFlick", "running...");
-			switch(taskLoopFlickFast[taskCnt]){
-			case 0:		eyes.setLuminous(0f);		break;
-			case 1:		eyes.setLuminous(1f);	break;
-			}
-        	if(taskCnt==taskLoopFlickFast.length-1)	taskCnt = 0;
-        	else									taskCnt++;
-        }
-    };
 }

@@ -100,7 +100,7 @@ public class TestMode extends AutoMode {
 			try {
 				switch(taskLoopEars[taskCnt]){
 				case 1:		ears.forwardSlowly();		break;
-				case -1:	ears.backForwardSlowly();	break;
+				case -1:	ears.forwardSlowly();	break;
 				default:	ears.reset();		break;
 				}
 				switch(taskLoopDrive[taskCnt]){

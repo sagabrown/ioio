@@ -11,6 +11,7 @@ import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.MainActivity;
 import ioio.robot.mode.crawl.AutoEmoMode;
+import ioio.robot.mode.crawl.PointOutMode;
 import ioio.robot.mode.crawl.ShowInfoMode;
 import ioio.robot.mode.crawl.TestMode;
 import ioio.robot.part.light.FullColorLED;
@@ -72,13 +73,14 @@ public class CrawlRobot implements Robot {
 	private TestMode testMode;
 	private AutoEmoMode autoEmoMode;
 	private ShowInfoMode showInfoMode;
+	private PointOutMode pointOutMode;
 	
 	private LinearLayout layout;
 	private LinearLayout modeSelectLayout, manualContollerLayout, sensorTextLayout, trailControllerLayout, trailViewLayout;
-	private ToggleButton autoButton, autoEmoButton, showInfoButton;
+	private ToggleButton autoButton, autoEmoButton, showInfoButton, pointOutButton;
 	private Button backButton, forwardButton, stopButton;
 	private Button[] emoButton;
-    private boolean isActive, isAuto, isAutoEmo, showInfo;
+    private boolean isActive, isAuto;
 	
 	/** コンストラクタ **/
 	public CrawlRobot(Util util) {
@@ -93,6 +95,7 @@ public class CrawlRobot implements Robot {
 		testMode = new TestMode();
 		autoEmoMode = new AutoEmoMode();
 		showInfoMode = new ShowInfoMode();
+		pointOutMode = new PointOutMode();
 		init();
 	}
 
@@ -101,6 +104,7 @@ public class CrawlRobot implements Robot {
 		testMode.setParams(util, this);
 		autoEmoMode.setParams(util, this);
 		showInfoMode.setParams(util, this);
+		pointOutMode.setParams(util, this);
 		wheel.init();
 		ears.init();
 		eyes.init();
@@ -250,6 +254,9 @@ public class CrawlRobot implements Robot {
         // 判定結果提示切り替えのボタン
         showInfoButton = showInfoMode.getOnOffButton(parent);
         autoLayout.addView(showInfoButton,lp);
+        // 指摘モード切り替えのボタン
+        pointOutButton = pointOutMode.getOnOffButton(parent);
+        autoLayout.addView(pointOutButton,lp);
         
 		return autoLayout;
 	}
@@ -377,15 +384,7 @@ public class CrawlRobot implements Robot {
 	 * @throws InterruptedException **/
 	public void happy() throws InterruptedException{
 		eyes.green();
-		ears.forward();
-		Thread.sleep(100);
-		ears.backForward();
-		Thread.sleep(100);
-		ears.forward();
-		Thread.sleep(100);
-		ears.backForward();
-		Thread.sleep(100);
-		ears.reset();
+		ears.swing();
 	}
 	/** 怒る **/
 	public void angry(){
@@ -396,7 +395,7 @@ public class CrawlRobot implements Robot {
 	 * @throws InterruptedException **/
 	public void sad() throws InterruptedException{
 		eyes.blue();
-		ears.backForwardSlowly();
+		ears.backwardSlowly();
 	}
 	
 
@@ -413,5 +412,14 @@ public class CrawlRobot implements Robot {
 		sensor.setSpeed(speed);
 	}
 	
-	
+
+
+	@Override
+	public void onResume() {
+		sensor.onResume();
+	}
+	@Override
+	public void onPause() {
+		sensor.onPause();
+	}
 }

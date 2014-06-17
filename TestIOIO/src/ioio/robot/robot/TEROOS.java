@@ -112,5 +112,15 @@ public class TEROOS implements Robot {
 		// TODO Auto-generated method stub
 		
 	}
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void onPause() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }

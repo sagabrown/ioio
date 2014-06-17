@@ -1,12 +1,14 @@
 package ioio.robot.region.crawl;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import ioio.robot.part.motor.SG90;
 import ioio.robot.region.Region;
 import ioio.robot.util.Util;
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.widget.LinearLayout;
 
 public class Ears extends Region {
@@ -23,6 +25,8 @@ public class Ears extends Region {
 	
 	private SG90[] motor;
 	private LinearLayout layout;
+	
+	boolean alreadySwinging = false;
 
 	/** コンストラクタ **/
 	public Ears(Util util) {
@@ -58,29 +62,121 @@ public class Ears extends Region {
 		motor[0].changeState(EAR_FORWARD);
 	}
 	/** 耳を伏せる **/
-	public void backForward() {
+	public void backward() {
 		motor[0].changeState(EAR_BACKWARD);
 	}
 	/** 耳を初期位置に **/
 	public void reset() {
 		motor[0].changeState(EAR_INIT);
 	}
-	/** ゆっくり耳を立てる 
-	 * @throws InterruptedException **/
-	public void forwardSlowly() throws InterruptedException{
-		float state = (float)motor[1].getState();
-		for(float s=state; s>EAR_FORWARD; s-=EAR_DD){
-			motor[0].changeState(s);
-			Thread.sleep(EAR_SLEEP);
+	/** 1度だけふるわせる **/
+	public void swing() {
+		if( intrruptTask() ){
+			ses = Executors.newSingleThreadScheduledExecutor();
+			ses.schedule(swingEarsTask, 0, TimeUnit.MILLISECONDS);
 		}
 	}
-	/** ゆっくり耳を伏せる
-	 * @throws InterruptedException **/
-	public void backForwardSlowly() throws InterruptedException{
-		float state = (float)motor[0].getState();
-		for(float s=state; s<EAR_BACKWARD; s+=EAR_DD){
-			motor[0].changeState(s);
-			Thread.sleep(EAR_SLEEP);
+	/** ゆっくり耳を立てる **/
+	public void forwardSlowly(){
+		if( intrruptTask() ){
+			ses = Executors.newSingleThreadScheduledExecutor();
+			ses.schedule(earsForwardSlowlyTask, 0, TimeUnit.MILLISECONDS);
 		}
 	}
+	/** ゆっくり耳を伏せる **/
+	public void backwardSlowly(){
+		if( intrruptTask() ){
+			ses = Executors.newSingleThreadScheduledExecutor();
+			ses.schedule(earsBackwardSlowlyTask, 0, TimeUnit.MILLISECONDS);
+		}
+	}
+	
+	
+	/** ふるわせのマネジメント **/
+	public void manageSwing(boolean isSwing){
+		if(ses != null){
+        	if(isSwing){
+        		if(!alreadySwinging){
+					if( intrruptTask() ){
+						ses = Executors.newSingleThreadScheduledExecutor();
+		    	        Log.i(TAG, "earsSwingStarted");
+		    	        ses.scheduleAtFixedRate(swingEarsTask2, 0L, 200L, TimeUnit.MILLISECONDS);
+					}
+					alreadySwinging = true;
+        	}
+        	}else{
+        		if(alreadySwinging){
+					if( intrruptTask() ){
+		    	        Log.i(TAG, "earsSwingEnd");
+        			}
+					alreadySwinging = false;
+	        		reset();
+        		}
+        	}
+		}
+	}
+	
+	
+    /** ゆっくり耳を立てるtask **/
+    private final Runnable earsForwardSlowlyTask = new Runnable(){
+        @Override
+        public void run() {
+    		try {
+    			float state = (float)motor[1].getState();
+    			for(float s=state; s>EAR_FORWARD; s-=EAR_DD){
+    				motor[1].changeState(s);
+    				Thread.sleep(EAR_SLEEP);
+    			}
+			} catch (InterruptedException e) {e.printStackTrace();}
+        }
+    };
+    /** ゆっくり耳を伏せるtask **/
+    private final Runnable earsBackwardSlowlyTask = new Runnable(){
+        @Override
+        public void run() {
+    		try {
+    			float state = (float)motor[1].getState();
+    			for(float s=state; s<EAR_BACKWARD; s+=EAR_DD){
+    				motor[1].changeState(s);
+    				Thread.sleep(EAR_SLEEP);
+    			}
+			} catch (InterruptedException e) {e.printStackTrace();}
+        }
+    };
+    /** 耳をふるわせるtask **/
+    private final Runnable swingEarsTask = new Runnable(){
+        @Override
+        public void run() {
+    		try {
+	    		forward();
+				Thread.sleep(100);
+	    		backward();
+	    		Thread.sleep(100);
+	    		forward();
+	    		Thread.sleep(100);
+	    		backward();
+	    		Thread.sleep(100);
+	    		reset();
+			} catch (InterruptedException e) {e.printStackTrace();}
+        }
+    };
+    /** 耳を繰り返しふるわせるtask **/
+    private final Runnable swingEarsTask2 = new Runnable(){
+    	private int[] taskLoopSwingFast = {1,0,1,0,1,0,1,0,1,0,1,0};
+    	private int[] taskLoopSwingSlow = {1,1,0,0,1,1,0,0,1,1,0,0};
+    	private int taskCnt = 0;
+        @Override
+        public void run() {
+        	if(!isAuto)	return;
+        	Log.d("SwingEars", "running...");
+			switch(taskLoopSwingFast[taskCnt]){
+			case 0:		forward();		break;
+			case 1:		backward();		break;
+			}
+        	if(taskCnt==taskLoopSwingFast.length-1)	taskCnt = 0;
+        	else									taskCnt++;
+        }
+    };
+
+
 }

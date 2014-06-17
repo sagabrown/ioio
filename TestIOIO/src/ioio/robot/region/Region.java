@@ -70,6 +70,19 @@ public abstract class Region {
 		}
 		for(PinOpenable p : part)	p.setIsAutoControlled(isAuto);
 	}
+	
+	/** É^ÉXÉNÇÃäÑÇËçûÇ› **/
+	protected boolean intrruptTask(){
+		if(ses != null){
+			if(ses != null){
+				if(!ses.isShutdown())	ses.shutdown();
+				ses = null;
+			}
+			return true;
+		}else{
+			return false;
+		}
+	}
 
 	public AutoMode getOwner() {
 		return owner;

@@ -13,6 +13,7 @@ import ioio.robot.mode.AutoMode;
 import ioio.robot.region.crawl.Ears;
 import ioio.robot.region.crawl.Eyes;
 import ioio.robot.region.crawl.Wheel;
+import ioio.robot.region.crawl.sensor.PoseAnalizer;
 import ioio.robot.region.crawl.sensor.SensorTester;
 import ioio.robot.region.crawl.sensor.TrailPoint;
 import ioio.robot.region.crawl.sensor.TrailView;
@@ -104,12 +105,10 @@ public class ShowInfoMode extends AutoMode {
     private final Runnable task = new Runnable(){
         @Override
         public void run() {
-        	Log.d("showInfo", "running...");
+        	//Log.d("showInfo", "running...");
         	if(!isAuto)	return;
         	
         	float dif = sensor.getPitchDifference();
-        	// 角度の変化を耳で示す
-        	ears.changeStateByRad(dif);
         	// 位置の違いを目で示す
         	switch(sensor.getNowTpType()){
         	case TrailPoint.NO_TYPE:
@@ -125,47 +124,16 @@ public class ShowInfoMode extends AutoMode {
         		eyes.setColor(TrailView.ARM_COLOR);
         		break;
         	}
-        	// 判定結果を目の点滅で示す
-        	if(Math.abs(dif) > 45*Math.PI && ses != null){
-        		if(ses[1] == null){
-        	        // タイマーを作成する
-        	        ses[1] = Executors.newSingleThreadScheduledExecutor();
-        		}
-    	        // 500msごとにtaskを実行する
-    	        Log.i(TAG, "eyesFlickStarted");
-	        ses[1].scheduleAtFixedRate(eyesTask, 0L, 500L, TimeUnit.MILLISECONDS);	
+        	// 判定結果を目の点滅と耳で示す
+        	if(Math.abs(dif) < PoseAnalizer.THRESHOLD_BACK1){
+            	eyes.manageFlick(false);
+        		ears.manageSwing(false);
+        		ears.changeStateByRad(-dif);
         	}else{
-        		if(!ses[1].isShutdown())	ses[0].shutdown();
+            	eyes.manageFlick(true);
+        		ears.manageSwing(true);
         	}
         }
-
-        
-        @Override
-        protected void finalize() throws Throwable {
-			if(ses != null){
-				// タイマーを停止する
-				ses[1].shutdown();
-			}
-        	super.finalize();
-        }
     };
-    
 
-    /** 目の点滅タスク **/
-    private final Runnable eyesTask = new Runnable(){
-    	private int[] taskLoopFlickFast = {1,0,1,0,1,0,1,0,1,0,1,0};
-    	private int[] taskLoopFlickSlow = {1,1,0,0,1,1,0,0,1,1,0,0};
-    	private int taskCnt = 0;
-        @Override
-        public void run() {
-        	if(!isAuto)	return;
-        	Log.d("eyeFlick", "running...");
-			switch(taskLoopFlickFast[taskCnt]){
-			case 0:		eyes.setLuminous(0f);		break;
-			case 1:		eyes.setLuminous(1f);	break;
-			}
-        	if(taskCnt==taskLoopFlickFast.length-1)	taskCnt = 0;
-        	else									taskCnt++;
-        }
-    };
 }

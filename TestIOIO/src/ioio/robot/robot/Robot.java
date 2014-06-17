@@ -15,4 +15,6 @@ public interface Robot {
 	public void setSpeed(float speed);
 	public void incCount();
 	public void decCount();
+	public void onResume();
+	public void onPause();
 }

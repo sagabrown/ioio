@@ -1,5 +1,8 @@
 package ioio.robot.region.crawl.sensor;
 
-public class Trail {
+import java.util.ArrayList;
 
+public class Trail {
+    private ArrayList<TrailPoint> tpList;
+    private TrailPoint lastTp;
 }

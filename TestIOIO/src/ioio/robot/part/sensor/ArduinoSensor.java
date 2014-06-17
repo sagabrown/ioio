@@ -22,6 +22,7 @@ public class ArduinoSensor {
 	private final static String TAG = "ArduinoSensor";
 	
 	private boolean isReading;
+	private static final boolean DEBUG = false;
 	
     
 	// 初期化(接続するたびに呼び出す)
@@ -31,7 +32,7 @@ public class ArduinoSensor {
 		return 2;
 	}
 	
-	public boolean getData(float[] attitude) throws IOException{
+	public boolean getData(float[] attitude, int[] accel) throws IOException{
 		if(isActive && !isReading){
 			isReading = true;
 			/*
@@ -43,9 +44,9 @@ public class ArduinoSensor {
 			}*/
 			// データ取得依頼
 			out.write(1);
-			Log.i(TAG, "Give me the data!!");
+			if(DEBUG)	Log.i(TAG, "Give me the data!!");
 			try {
-				Thread.sleep(20);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -61,14 +62,14 @@ public class ArduinoSensor {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					if(System.currentTimeMillis()-ct > 500){
+					if(System.currentTimeMillis()-ct > 100){
 						isReading = false;
-						Log.i(TAG, "not avairable");
+						Log.i(TAG, "not available");
 						return false;
 					}
 				}
 				text = br.readLine();
-				Log.i(TAG, "trash: "+text);
+				if(DEBUG)	Log.i(TAG, "trash: "+text);
 			}while(!text.equals("0"));
 			// データを読む
 			// あまりにも長い間データが得られなかったらあきらめる
@@ -79,28 +80,38 @@ public class ArduinoSensor {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				if(System.currentTimeMillis()-ct > 500){
+				if(System.currentTimeMillis()-ct > 100){
 					isReading = false;
-					Log.i(TAG, "not avairable");
+					Log.i(TAG, "not available");
 					return false;
 				}
 			}
 			String readTextData = br.readLine();
-			Log.i(TAG, "read data: "+readTextData);
+			if(DEBUG)	Log.i(TAG, "read data: "+readTextData);
 			isReading = false;
+			
+			// 値を切り分け
+			String[] dataTexts = readTextData.split(":");
+			if(dataTexts.length != 2)	return false;
+			
 			// 値を取り出してattitudeに格納
-			String[] attitudeText = readTextData.split(",");
-			if(attitudeText.length != 3){
-				isReading = false;
-				return false;
+			String[] attitudeText = dataTexts[0].split(",");
+			if(attitudeText.length != attitude.length+1 || !attitudeText[0].equals("angles"))	return false;
+			for(int i=0; i<attitude.length; i++)	attitude[i] = Float.valueOf(attitudeText[i+1]);
+			//Log.i(TAG , "pitch: "+attitude[0]+", roll: "+attitude[1]+", azimuth: "+attitude[2]);
+			
+			// 値を取り出してaccelに格納
+			String[] accelText = dataTexts[1].split(",");
+			if(accelText.length != accel.length+1 || !accelText[0].equals(" accels"))	return false;
+			for(int i=0; i<accel.length; i++){
+				accel[i] = Integer.valueOf(accelText[i+1].trim());
 			}
-			for(int i=0; i<attitude.length; i++){
-				attitude[i] = Float.valueOf(attitudeText[i]);
-			}
-			//Log.i(TAG , "x: "+attitude[0]+", y: "+attitude[1]+", z: "+attitude[2]);
+			//Log.i(TAG, "Load Success");
 			return true;
+		}else{
+			Log.i(TAG, "skipped! already reading");
+			return false;
 		}
-		return false;
 	}
 	
 	public void activate(){
