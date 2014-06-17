@@ -1,12 +1,8 @@
 package ioio.robot;
 
 import ioio.robot.R;
-import ioio.robot.controller.MainActivity;
-import ioio.robot.sensor.SensorTest;
 
 import java.util.ArrayList;
-
-
 
 import android.app.Activity;
 import android.app.ActivityGroup;
@@ -32,7 +28,7 @@ public class MainActivityGroup extends ActivityGroup {
 	    activities = new ArrayList<Activity>();
 
 	    setView(MainActivity.class, "MainActivity");
-	    Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
+	    //Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
 	    //setView(SensorTest.class, "SensorTest");
 	    //Log.d("ActivityGroup", getCurrentActivity().getLocalClassName());
     }

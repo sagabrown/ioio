@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="controller">Controller</string>
-    <string name="app_name">IOIO ROBOT</string>
-    <string name="pwm">モーター制御</string>
+    <string name="app_name">IOIO ROBOT v2.0</string>
+    <string name="pwm">motor ctrl</string>
 </resources>
