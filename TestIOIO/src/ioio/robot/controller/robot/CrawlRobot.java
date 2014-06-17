@@ -16,6 +16,7 @@ import ioio.robot.controller.motor.SG90;
 import ioio.robot.controller.motor.ServoMotor;
 import ioio.robot.light.FullColorLED;
 import ioio.robot.light.LED;
+import ioio.robot.sensor.PoseAnalizer;
 import ioio.robot.sensor.SensorTester;
 import ioio.robot.sensor.SpeedMater;
 import ioio.robot.sensor.TrailPoint;
@@ -49,6 +50,18 @@ pin 10-12	: LED
 
 public class CrawlRobot implements Robot {
 	private final static String TAG = "CrawlRobot";
+	private final static float DEG2RAD = (float)(Math.PI/180.0);
+	
+	private final static int DRIVE_TASK_SES = 0;
+	private final static int EYE_TASK_SES = 1;
+	private final static int EARS_TASK_SES = 2;
+
+	private final static int AUTO_DRIVE_SES = 3;
+	private final static int AUTO_EMOTION_SES = 4;
+	private final static int SHOW_INFO_SES = 5;
+	
+	private final static int SES_NUM = 6;
+	
 	private Util util;
 	private Motor[] motor;
 	private FullColorLED[] led;
@@ -81,7 +94,7 @@ public class CrawlRobot implements Robot {
 		for(int i=0; i<len; i++){
 			this.motorInitState[i] = motorInitState[i];
 		}
-		ses = new ScheduledExecutorService[4];
+		ses = new ScheduledExecutorService[SES_NUM];
 		init();
 	}
 
@@ -397,14 +410,15 @@ public class CrawlRobot implements Robot {
 		isAuto = tf;
 		if(tf){
 	        // タイマーを作成する
-	        ses[0] = Executors.newSingleThreadScheduledExecutor();
+	        ses[AUTO_DRIVE_SES] = Executors.newSingleThreadScheduledExecutor();
 	        // 500msごとにtaskを実行する
         	Log.i(TAG, "autoControllStarted");
-        	ses[0].scheduleAtFixedRate(autoControllTestTask, 0L, 500L, TimeUnit.MILLISECONDS);
+        	ses[AUTO_DRIVE_SES].scheduleAtFixedRate(autoControllTestTask, 0L, 500L, TimeUnit.MILLISECONDS);
 		}else{
-			if(ses[0] == null)	return;
+			if(ses[AUTO_DRIVE_SES] == null)	return;
 			// タイマーを停止する
-			ses[0].shutdown();
+        	Log.i(TAG, "autoControllEnd");
+			ses[AUTO_DRIVE_SES].shutdown();
 			motor[0].changeState(0.0f);
 		}
 		for(Motor m : motor)	m.setIsAutoControlled(tf);
@@ -414,32 +428,38 @@ public class CrawlRobot implements Robot {
 		isAutoEmo = tf;
 		if(tf){
 	        // タイマーを作成する
-	        ses[1] = Executors.newSingleThreadScheduledExecutor();
+	        ses[AUTO_EMOTION_SES] = Executors.newSingleThreadScheduledExecutor();
 	        // 2000msごとにtaskを実行する
 	        Log.i(TAG, "randomEmotionStarted");
-	        ses[1].scheduleAtFixedRate(randomEmotionTask, 0L, 2000L, TimeUnit.MILLISECONDS);
+	        ses[AUTO_EMOTION_SES].scheduleAtFixedRate(randomEmotionTask, 0L, 2000L, TimeUnit.MILLISECONDS);
 		}else{
 			stand();
 			if(ses == null)	return;
 			// タイマーを停止する
-			ses[1].shutdown();
+	        Log.i(TAG, "randomEmotionEnd");
+			ses[AUTO_EMOTION_SES].shutdown();
 		}
+		motor[1].setIsAutoControlled(tf);
 	}
 	/** 計測結果表示に切り替え **/
 	public void setShowInfo(boolean tf){
 		showInfo = tf;
 		if(tf){
 	        // タイマーを作成する
-	        ses[2] = Executors.newSingleThreadScheduledExecutor();
+	        ses[SHOW_INFO_SES] = Executors.newSingleThreadScheduledExecutor();
 	        // 100msごとにtaskを実行する
 	        Log.i(TAG, "showInfoStarted");
-	        ses[2].scheduleAtFixedRate(showInfoTask, 0L, 100L, TimeUnit.MILLISECONDS);
+	        ses[SHOW_INFO_SES].scheduleAtFixedRate(showInfoTask, 0L, 100L, TimeUnit.MILLISECONDS);
 		}else{
 			stand();
 			if(ses == null)	return;
 			// タイマーを停止する
-			ses[2].shutdown();
+	        Log.i(TAG, "showInfoEnd");
+			ses[SHOW_INFO_SES].shutdown();
+			// 目の点滅タスクは中止
+			manageFlick(false);
 		}
+		motor[1].setIsAutoControlled(tf);
 	}
 
 	private final static float GO_FORWARD = 1.0f;
@@ -486,31 +506,93 @@ public class CrawlRobot implements Robot {
 		motor[1].changeState(EAR_FORWARD);
 	}
 	/** 耳を伏せる **/
-	private void earsBackForward() {
+	private void earsBackward() {
 		motor[1].changeState(EAR_BACKWARD);
 	}
 	/** 耳を初期位置に **/
 	private void earsReset() {
 		motor[1].changeState(EAR_INIT);
 	}
-	/** ゆっくり耳を立てる 
-	 * @throws InterruptedException **/
-	public void earsForwardSlowly() throws InterruptedException{
-		float state = (float)motor[1].getState();
-		for(float s=state; s>EAR_FORWARD; s-=EAR_DD){
-			motor[1].changeState(s);
-			Thread.sleep(EAR_SLEEP);
-		}
-	}
-	/** ゆっくり耳を伏せる
-	 * @throws InterruptedException **/
-	public void earsBackForwardSlowly() throws InterruptedException{
-		float state = (float)motor[1].getState();
-		for(float s=state; s<EAR_BACKWARD; s+=EAR_DD){
-			motor[1].changeState(s);
-			Thread.sleep(EAR_SLEEP);
-		}
-	}
+    /** ゆっくり耳を立てるtask **/
+    private final Runnable earsForwardSlowlyTask = new Runnable(){
+        @Override
+        public void run() {
+    		try {
+    			float state = (float)motor[1].getState();
+    			for(float s=state; s>EAR_FORWARD; s-=EAR_DD){
+    				motor[1].changeState(s);
+    				Thread.sleep(EAR_SLEEP);
+    			}
+			} catch (InterruptedException e) {e.printStackTrace();}
+        }
+    };
+    /** ゆっくり耳を伏せるtask **/
+    private final Runnable earsBackwardSlowlyTask = new Runnable(){
+        @Override
+        public void run() {
+    		try {
+    			float state = (float)motor[1].getState();
+    			for(float s=state; s<EAR_BACKWARD; s+=EAR_DD){
+    				motor[1].changeState(s);
+    				Thread.sleep(EAR_SLEEP);
+    			}
+			} catch (InterruptedException e) {e.printStackTrace();}
+        }
+    };
+    /** 耳をふるわせるtask **/
+    private final Runnable swingEarsTask = new Runnable(){
+        @Override
+        public void run() {
+    		try {
+	    		earsForward();
+				Thread.sleep(100);
+	    		earsBackward();
+	    		Thread.sleep(100);
+	    		earsForward();
+	    		Thread.sleep(100);
+	    		earsBackward();
+	    		Thread.sleep(100);
+	    		earsReset();
+			} catch (InterruptedException e) {e.printStackTrace();}
+        }
+    };
+    /** 耳を繰り返しふるわせるtask **/
+    private final Runnable swingEarsTask2 = new Runnable(){
+    	private int[] taskLoopSwingFast = {1,0,1,0,1,0,1,0,1,0,1,0};
+    	private int[] taskLoopSwingSlow = {1,1,0,0,1,1,0,0,1,1,0,0};
+    	private int taskCnt = 0;
+        @Override
+        public void run() {
+        	if(!isActive)	return;
+        	Log.d("SwingEars", "running...");
+			switch(taskLoopSwingFast[taskCnt]){
+			case 0:		earsForward();		break;
+			case 1:		earsBackward();		break;
+			}
+        	if(taskCnt==taskLoopSwingFast.length-1)	taskCnt = 0;
+        	else									taskCnt++;
+        }
+    };
+    
+
+    /** 目の点滅タスク **/
+    private final Runnable eyesFlickTask = new Runnable(){
+    	private int[] taskLoopFlickFast = {1,0,1,0,1,0,1,0,1,0,1,0};
+    	private int[] taskLoopFlickSlow = {1,1,0,0,1,1,0,0,1,1,0,0};
+    	private int taskCnt = 0;
+        @Override
+        public void run() {
+        	if(!isActive)	return;
+        	Log.d("eyeFlick", "running...");
+			switch(taskLoopFlickFast[taskCnt]){
+			case 0:		led[0].setLuminous(0f);		break;
+			case 1:		led[0].setLuminous(1f);		break;
+			}
+        	if(taskCnt==taskLoopFlickFast.length-1)	taskCnt = 0;
+        	else									taskCnt++;
+        }
+    };
+    
 
 	/** 平常 **/
 	public void stand(){
@@ -521,15 +603,10 @@ public class CrawlRobot implements Robot {
 	 * @throws InterruptedException **/
 	public void happy() throws InterruptedException{
 		led[0].green();
-		earsForward();
-		Thread.sleep(100);
-		earsBackForward();
-		Thread.sleep(100);
-		earsForward();
-		Thread.sleep(100);
-		earsBackForward();
-		Thread.sleep(100);
-		earsReset();
+		if( intrruptTask(EARS_TASK_SES) ){
+			ses[EARS_TASK_SES] = Executors.newSingleThreadScheduledExecutor();
+			ses[EARS_TASK_SES].schedule(swingEarsTask, 0, TimeUnit.MILLISECONDS);
+		}
 	}
 	/** 怒る **/
 	public void angry(){
@@ -540,7 +617,10 @@ public class CrawlRobot implements Robot {
 	 * @throws InterruptedException **/
 	public void sad() throws InterruptedException{
 		led[0].blue();
-		earsBackForwardSlowly();
+		if( intrruptTask(EARS_TASK_SES) ){
+			ses[EARS_TASK_SES] = Executors.newSingleThreadScheduledExecutor();
+			ses[EARS_TASK_SES].schedule(earsBackwardSlowlyTask, 0, TimeUnit.MILLISECONDS);
+		}
 	}
 	
 
@@ -577,8 +657,18 @@ public class CrawlRobot implements Robot {
 			try {
 	        	if(!isAutoEmo){
 					switch(taskLoopEars[taskCnt]){
-					case 1:		earsForwardSlowly();		break;
-					case -1:	earsBackForwardSlowly();	break;
+					case 1:
+						if( intrruptTask(EARS_TASK_SES) ){
+							ses[EARS_TASK_SES] = Executors.newSingleThreadScheduledExecutor();
+							ses[EARS_TASK_SES].schedule(earsForwardSlowlyTask, 0, TimeUnit.MILLISECONDS);
+						}
+						break;
+					case -1:
+						if( intrruptTask(EARS_TASK_SES) ){
+							ses[EARS_TASK_SES] = Executors.newSingleThreadScheduledExecutor();
+							ses[EARS_TASK_SES].schedule(earsBackwardSlowlyTask, 0, TimeUnit.MILLISECONDS);
+						}
+						break;
 					default:	earsReset();		break;
 					}
 	        	}
@@ -615,7 +705,7 @@ public class CrawlRobot implements Robot {
 	        	case 0:	stand();	break;
 	        	case 1:	happy();	break;
 	        	case 2:	angry();	break;
-	        	case 3:	sad();	break;
+	        	case 3:	sad();		break;
 	        	}
         	}catch(InterruptedException e){
         		e.printStackTrace();
@@ -624,15 +714,15 @@ public class CrawlRobot implements Robot {
     };
     
 	/** 計測結果提示のタスク **/
+	boolean alreadyFlicking = false;
+	boolean alreadySwinging = false;
     private final Runnable showInfoTask = new Runnable(){
         @Override
         public void run() {
-        	Log.d("showInfo", "running...");
+        	//Log.d("showInfo", "running...");
         	if(!isActive)	return;
         	
         	float dif = sensor.getPitchDifference();
-        	// 角度の変化を耳で示す
-        	earsChangeStateByRad(dif);
         	// 位置の違いを目で示す
         	switch(sensor.getNowTpType()){
         	case TrailPoint.NO_TYPE:
@@ -648,48 +738,84 @@ public class CrawlRobot implements Robot {
         		led[0].setColor(TrailView.ARM_COLOR);
         		break;
         	}
-        	// 判定結果を目の点滅で示す
-        	if(Math.abs(dif) > 45*Math.PI && ses != null){
-        		if(ses[3] == null){
-        	        // タイマーを作成する
-        	        ses[3] = Executors.newSingleThreadScheduledExecutor();
-        		}
-    	        // 500msごとにtaskを実行する
-    	        Log.i(TAG, "eyesFlickStarted");
-	        ses[3].scheduleAtFixedRate(eyesTask, 0L, 500L, TimeUnit.MILLISECONDS);	
+        	// 判定結果を目の点滅と耳で示す
+        	if(Math.abs(dif) < PoseAnalizer.THRESHOLD_BACK1){
+            	manageFlick(false);
+        		manageSwingEars(false);
+        		earsChangeStateByRad(-dif);
         	}else{
-        		if(!ses[3].isShutdown())	ses[3].shutdown();
+            	manageFlick(true);
+        		manageSwingEars(true);
         	}
-        }
-        
-        @Override
-        protected void finalize() throws Throwable {
-			if(ses != null){
-				// タイマーを停止する
-				ses[3].shutdown();
-			}
-        	super.finalize();
-        }
-        
-    };
-    
-    /** 目の点滅タスク **/
-    private final Runnable eyesTask = new Runnable(){
-    	private int[] taskLoopFlickFast = {1,0,1,0,1,0,1,0,1,0,1,0};
-    	private int[] taskLoopFlickSlow = {1,1,0,0,1,1,0,0,1,1,0,0};
-    	private int taskCnt = 0;
-        @Override
-        public void run() {
-        	if(!isActive)	return;
-        	Log.d("eyeFlick", "running...");
-			switch(taskLoopFlickFast[taskCnt]){
-			case 0:		led[0].setLuminous(0f);		break;
-			case 1:		led[0].setLuminous(1f);	break;
-			}
-        	if(taskCnt==taskLoopFlickFast.length-1)	taskCnt = 0;
-        	else									taskCnt++;
         }
     };
 	
+	public void manageFlick(boolean isFlick){
+		if(ses != null){
+        	if(isFlick){
+        		if(!alreadyFlicking){
+					if( intrruptTask(EYE_TASK_SES) ){
+						ses[EYE_TASK_SES] = Executors.newSingleThreadScheduledExecutor();
+		    	        Log.i(TAG, "eyesFlickStarted");
+		    	        ses[EYE_TASK_SES].scheduleAtFixedRate(eyesFlickTask, 0L, 200L, TimeUnit.MILLISECONDS);
+					}
+	    	        alreadyFlicking = true;
+        		}
+        	}else{
+        		if(alreadyFlicking){
+					if( intrruptTask(EYE_TASK_SES) ){
+		    	        Log.i(TAG, "eyesFlickEnd");
+        			}
+	    	        alreadyFlicking = false;
+	        		led[0].setLuminous(1f);
+        		}
+        	}
+		}
+	}
+	public void manageSwingEars(boolean isSwing){
+		if(ses != null){
+        	if(isSwing){
+        		if(!alreadySwinging){
+					if( intrruptTask(EARS_TASK_SES) ){
+						ses[EARS_TASK_SES] = Executors.newSingleThreadScheduledExecutor();
+		    	        Log.i(TAG, "earsSwingStarted");
+		    	        ses[EARS_TASK_SES].scheduleAtFixedRate(swingEarsTask2, 0L, 200L, TimeUnit.MILLISECONDS);
+					}
+					alreadySwinging = true;
+        	}
+        	}else{
+        		if(alreadySwinging){
+					if( intrruptTask(EARS_TASK_SES) ){
+		    	        Log.i(TAG, "earsSwingEnd");
+        			}
+					alreadySwinging = false;
+	        		earsReset();
+        		}
+        	}
+		}
+	}
+    
+
+	@Override
+	public void onResume() {
+		sensor.onResume();
+	}
+	@Override
+	public void onPause() {
+
+		sensor.onPause();
+	}
+	
+	private boolean intrruptTask(int num){
+		if(ses != null){
+			if(ses[num] != null){
+				if(!ses[num].isShutdown())	ses[num].shutdown();
+				ses[num] = null;
+			}
+			return true;
+		}else{
+			return false;
+		}
+	}
 	
 }

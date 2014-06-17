@@ -38,6 +38,7 @@ public class FullColorLED {
 	public void init(){
 		for(LED l : led)	l.init();
 		isActive = false;
+		color = new float[3];
 	}
 
 	/** 受け取った番号のピンを開いて対応づける(開いたピンの数1を返す) **/

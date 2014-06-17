@@ -45,12 +45,16 @@ public class SensorTester {
 	
     private ShockSensor shockSensor;
     private ArduinoSensor sensorModule;
+    
+    PoseAnalizer poseAnalizer;
+    AccelAnalizer accelAnalizer;
 	
 	float[] rotationMatrix = new float[9];
 	float[] gravity = new float[3];
 	float[] gyro = new float[3];
 	float[] geomagnetic = new float[3];
 	float[] attitude = new float[3];
+	int[] accel = new int[3];
 	float x1, y1, z1;
 	float x2, y2, z2;
 	float azimuth,pitch,roll;	// rad
@@ -72,19 +76,20 @@ public class SensorTester {
 	private int shockCount;
 	
 	TrailView trailView;
+	AccelView accelView;
 	
 	private boolean isActive;
 	private boolean sensorInited;
 
-	private static final float THRESHOLD_BACK1 = 30 * DEG2RAD;
-	private static final float THRESHOLD_BACK2 = 70 * DEG2RAD;
-	private static final float THRESHOLD_ARM1 = 30 * DEG2RAD;
-	private static final float THRESHOLD_ARM2 = 60 * DEG2RAD;
+	private static final long SAMPLING_INTERVAL = 100; // ms
+	private static final long SAMPLING_FREQ = 1000 / SAMPLING_INTERVAL; // Hz
 	
 	
 	public SensorTester(Util util, CrawlRobot parent){
 		this.util = util;
 		this.parent = parent;
+	    poseAnalizer = new PoseAnalizer();
+	    accelAnalizer = new AccelAnalizer();
 		sensorModule = new ArduinoSensor();
 		initInfo();
 		isLogging = false;
@@ -130,9 +135,9 @@ public class SensorTester {
 			x1 = (float)(Math.sin(theta) * Math.cos(phi));
 			y1 = (float)(Math.sin(theta) * Math.sin(phi));
 			z1 = (float)(Math.cos(theta));
-			util.setText(valueX, String.format("%.3f", x1));
-			util.setText(valueY, String.format("%.3f", y1));
-			util.setText(valueZ, String.format("%.3f", z1));
+			//util.setText(valueX, String.format("%.3f", x1));
+			//util.setText(valueY, String.format("%.3f", y1));
+			//util.setText(valueZ, String.format("%.3f", z1));
 			// âE
 			theta = Math.PI*0.5 - roll;
 			phi = -Math.PI*0.5 - azimuth;
@@ -144,28 +149,17 @@ public class SensorTester {
 			trailView.setNowData(attitude[2], attitude[0], attitude[1],x1,y1,z1,x2,y2,z2);
 			nowTp = trailView.getNowTp();
 			
+			// â¡ë¨ìxÇÃï\é¶
+			float accelNorm = (float) Math.sqrt(accel[0]*accel[0] + accel[1]*accel[1] + accel[2]*accel[2]);
+			accelView.addAccelNorm(accelNorm);
+			util.setText(valueX, String.format("%d", accel[0]));
+			util.setText(valueY, String.format("%d", accel[1]));
+			util.setText(valueZ, String.format("%d", accel[2]));
+			
 			// îªíË
-			float dif = getPitchDifference();
-        	switch(getNowTpType()){
-        	case TrailPoint.NO_TYPE:
-        		util.setText(infoLabel, "");
-        		break;
-        	case TrailPoint.BACK:
-        	case TrailPoint.SHOLDER:
-        		if(dif < -THRESHOLD_BACK2)			util.setText(infoLabel, "Ç§Ç¬Ç‘Çπ");
-        		else if(dif < -THRESHOLD_BACK1)		util.setText(infoLabel, "ëOåXépê®");
-        		else if(dif > THRESHOLD_BACK2)		util.setText(infoLabel, "ã¬å¸ÇØ");
-        		else if(dif > THRESHOLD_BACK1)		util.setText(infoLabel, "å„åXépê®");
-        		else								util.setText(infoLabel, "íºóß"+dif);
-        		break;
-        	case TrailPoint.ARM:
-        		if(dif < -THRESHOLD_ARM2)			util.setText(infoLabel, "òrÇâ∫Ç∞ÇƒÇ¢ÇÈ");
-        		else if(dif < -THRESHOLD_ARM1)		util.setText(infoLabel, "òrÇâ∫Ç∞Ç¨Ç›");
-        		else if(dif > THRESHOLD_ARM2)		util.setText(infoLabel, "òrÇè„Ç∞ÇƒÇ¢ÇÈ");
-        		else if(dif > THRESHOLD_ARM1)		util.setText(infoLabel, "òrÇè„Ç∞Ç¨Ç›");
-        		else								util.setText(infoLabel, "Ç”Ç¬Ç§"+dif);
-        		break;
-        	}
+			util.setText(infoLabel,
+					poseAnalizer.getPoseInfo(getNowTpType(), getPitchDifference())
+					+" / "+ accelAnalizer.getAccelInfo(getNowTpType(), accelView.getPeak(), accelView.getPeakVal(), accelView.getRange()));
 		}
 	};
 
@@ -247,12 +241,15 @@ public class SensorTester {
 	}
 	
 	public LinearLayout getTrailViewLayout(Context context) {
-		trailView = new TrailView(context);
-
 		LinearLayout layout = new LinearLayout(context);
 		layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(5, 2, 5, 2);
+
+		trailView = new TrailView(context);
 		layout.addView(trailView);
+		
+		accelView = new AccelView(context, SAMPLING_FREQ);
+		layout.addView(accelView);
 		
 		// TrailViewÇÃëÄçÏÉpÉlÉã
 		layout.addView(trailView.getLayout(context));
@@ -286,7 +283,7 @@ public class SensorTester {
 			public void onClick(View arg0) {
 				startButton.setEnabled(false);
 				stopButton.setEnabled(true);
-				trailView.onResume();
+				//trailView.onResume();
 				isLogging = true;
 				try {
 					parent.goForward();
@@ -305,7 +302,7 @@ public class SensorTester {
 			public void onClick(View arg0) {
 				startButton.setEnabled(true);
 				stopButton.setEnabled(false);
-				trailView.onPause();
+				//trailView.onPause();
 				isLogging = false;
 				parent.stop();
 			}
@@ -367,7 +364,7 @@ public class SensorTester {
 		}
 		sensorInited = true;
         // 100msÇ≤Ç∆Ç…taskÇé¿çsÇ∑ÇÈ
-        ses[0].scheduleAtFixedRate(task, 0L, 300L, TimeUnit.MILLISECONDS);
+        ses[0].scheduleAtFixedRate(task, 0L, SAMPLING_INTERVAL, TimeUnit.MILLISECONDS);
 	}
 	
 	
@@ -429,7 +426,9 @@ public class SensorTester {
 	}
 	
 	private boolean getData() throws ConnectionLostException, InterruptedException, IOException{
-		boolean success = sensorModule.getData(attitude);
+		boolean success = sensorModule.getData(attitude, accel);
+		//Log.i(TAG, "attitude: "+attitude[0]+","+attitude[1]+","+attitude[2]);
+		//Log.i(TAG, "accel: "+accel[0]+","+accel[1]+","+accel[2]);
 		return success;
 	}
 	
@@ -442,8 +441,9 @@ public class SensorTester {
 	}
 	public float getPitchDifference(){
 		float dif = getPitch()-nowTp.pitch;
-		while(dif>Math.PI)	dif -= Math.PI;
-		while(dif<-Math.PI)	dif += Math.PI;
+		//Log.i(TAG, "now pitch: " + getPitch() + ", tp pitch: " + nowTp.pitch);
+		while(dif>Math.PI)	dif -= 2*Math.PI;
+		while(dif<-Math.PI)	dif += 2*Math.PI;
 		return dif;
 	}
 	public float getAzimuth(){
@@ -455,5 +455,31 @@ public class SensorTester {
 	public float getRoll(){
 		return roll;
 	}
+	
+	public void onResume(){
+		accelView.onResume();
+		/*
+        // debug
+		ses = new ScheduledExecutorService[1];
+		for(int i=0; i<ses.length; i++)	ses[i] = Executors.newSingleThreadScheduledExecutor();
+		sensorInited = true;
+        ses[0].scheduleAtFixedRate(testTask, 0L, SAMPLING_INTERVAL, TimeUnit.MILLISECONDS);
+        */
+	}
+	
+	public void onPause(){
+		accelView.onPause();
+	}
+
+	/** debugóp **/
+	private final Runnable testTask = new Runnable(){
+		public void run(){
+			// îªíË
+			util.setText(infoLabel,
+					//poseAnalizer.getPoseInfo(getNowTpType(), getPitchDifference())
+					//+" / "+ 
+					accelAnalizer.getAccelInfo(TrailPoint.SHOLDER, accelView.getPeak(), accelView.getPeakVal(), accelView.getRange()));
+		}
+	};
 	
 }

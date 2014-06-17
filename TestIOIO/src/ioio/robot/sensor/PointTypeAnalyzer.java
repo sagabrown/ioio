@@ -51,9 +51,11 @@ public class PointTypeAnalyzer {
 			
 		}
 
-		for(int i=0; i<len; i++){
-			tpList.clear();
-			tpList.addAll(newList);
+		synchronized(tpList){
+			for(int i=0; i<len; i++){
+				tpList.clear();
+				tpList.addAll(newList);
+			}
 		}
 	}
 }

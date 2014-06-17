@@ -57,6 +57,15 @@ public class MainActivity extends IOIOActivity {
 		util.setEnabled(button_, false);	// IOIO‚ÉÚ‘±‚µ‚Ä‚¢‚È‚¢‚¤‚¿‚Í‰Ÿ‚¹‚È‚¢
 	}
 
+	public void onResume(){
+		super.onResume();
+		robot_.onResume();
+	}
+	public void onPause(){
+		super.onPause();
+		robot_.onPause();
+	}
+
 	/**
 	 * This is the thread on which all the IOIO activity happens. It will be run
 	 * every time the application is resumed and aborted when it is paused. The

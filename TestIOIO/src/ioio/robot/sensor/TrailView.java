@@ -23,22 +23,26 @@ import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
 
 public class TrailView extends GLSurfaceView {
+	private static final String TAG = "TrailView";
 	SeekBar seekBarX, seekBarY, seekBarZ;
 	SeekBar seekBarLaX, seekBarLaY, seekBarLaZ;
-	private int halfW = 2;
+    private ScheduledExecutorService ses = null;
+	
+	private static final int halfW = 2;
+    private static final int halfHeight = 200;
+    private static final int scale = 1;
 	private float speed = 4;
+	
     private ArrayList<TrailPoint> tpList;
     private TrailPoint lastTp;
 	private float azimuth, pitch, roll;
 	private float xf, yf, zf, xr, yr, zr;
     private float oldX1, oldY1, oldZ1;
     private float oldX2, oldY2, oldZ2;
+    
     private float lookX, lookY, lookZ;
     private float laX, laY, laZ;
-    private int halfHeight = 200;
-    private int scale = 1;
     private boolean fix;
-    private ScheduledExecutorService ses = null;
 
 	final static float[] vertices1 = {
 			-1000,-1,-1,
@@ -480,7 +484,7 @@ public class TrailView extends GLSurfaceView {
      * @param x1,y1,z1 前方の単位ベクトル
      * @param x2,y2,z2 右方の単位ベクトル
      */
-    public void addTp(int count, boolean forward, float x1, float y1, float z1, float x2, float y2, float z2, float pitch, float roll, float azimuth ){
+    public void addTp(int count, boolean forward, float x1, float y1, float z1, float x2, float y2, float z2, float azimuth, float pitch, float roll ){
 		float x,y,z;
     	if(forward){
     		x = lastTp.x + speed * (float)0.5*(oldX1+x1);
@@ -513,7 +517,7 @@ public class TrailView extends GLSurfaceView {
 				tpList.add(count, tp);
 			}
 		}
-		//Log.d("TP", xr+","+yr+","+zr+","+xl+","+yl+","+zl);
+		//Log.i("add TP", tp.azimuth+","+tp.pitch+","+tp.roll);
     	lastTp = tp;
     	oldX1 = x1;
     	oldY1 = y1;
@@ -524,6 +528,7 @@ public class TrailView extends GLSurfaceView {
     }
     
     public void selectTp(int count){
+    	//Log.w(TAG, "select tp "+count);
     	TrailPoint temp;
 		synchronized(tpList){
 			temp = tpList.get(count);
@@ -551,14 +556,15 @@ public class TrailView extends GLSurfaceView {
     	return tpList.size();
     }
  
- 
+    @Override
     public void onResume(){
         // タイマーを作成する
         ses = Executors.newSingleThreadScheduledExecutor();
-        // 100msごとにRunnableの処理を実行する
+        // 1000msごとにRunnableの処理を実行する
         ses.scheduleAtFixedRate(task, 0L, 1000L, TimeUnit.MILLISECONDS);
     }
- 
+
+    @Override
     public void onPause(){
         // タイマーを停止する
         ses.shutdown();
