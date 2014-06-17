@@ -19,14 +19,15 @@ import ioio.robot.region.crawl.sensor.TrailView;
 import ioio.robot.robot.CrawlRobot;
 import ioio.robot.util.Util;
 
-public class ShowInfoMode extends AutoMode {
-	private final static String TAG = "showInfoMode";
+public class PointOutMode extends AutoMode {
+	private final static String TAG = "PointOutMode";
 	private Wheel wheel;
 	private Ears ears;
 	private Eyes eyes;
 	private SensorTester sensor;
+	private TrailPoint shoulder, back, leg;	// 代表点
 	
-	public ShowInfoMode() {
+	public PointOutMode() {
 		button = null;
 		isAuto = false;
 		ses = new ScheduledExecutorService[2];
@@ -44,20 +45,20 @@ public class ShowInfoMode extends AutoMode {
 	protected void generateButton(Context context){
         // オート切り替えのボタン
         button = new ToggleButton(context);
-        button.setTextOn("show-info");
-        button.setTextOff("hide-info");
+        button.setTextOn("point-out");
+        button.setTextOff("ignore");
         button.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				if(isChecked){
 					// 競合するオートモードをオフに
-					if(wheel.getOwner() != null && wheel.getOwner() != ShowInfoMode.this){
+					if(wheel.getOwner() != null && wheel.getOwner() != PointOutMode.this){
 						wheel.getOwner().buttonOff();
 					}
-					if(ears.getOwner() != null && ears.getOwner() != ShowInfoMode.this){
+					if(ears.getOwner() != null && ears.getOwner() != PointOutMode.this){
 						ears.getOwner().buttonOff();
 					}
-					if(eyes.getOwner() != null && eyes.getOwner() != ShowInfoMode.this){
+					if(eyes.getOwner() != null && eyes.getOwner() != PointOutMode.this){
 						eyes.getOwner().buttonOff();
 					}
 					start();
@@ -66,7 +67,7 @@ public class ShowInfoMode extends AutoMode {
 				}
 			}
         });
-        button.setText("hide-info");
+        button.setText("ignore");
 	}
 
 	@Override
@@ -76,10 +77,10 @@ public class ShowInfoMode extends AutoMode {
         // タイマーを作成する
         ses[0] = Executors.newSingleThreadScheduledExecutor();
         // 100msごとにtaskを実行する
-    	Log.i(TAG, "showInfoStarted");
+    	Log.i(TAG, "PointOutStarted");
     	ses[0].scheduleAtFixedRate(task, 0L, 100L, TimeUnit.MILLISECONDS);
 
-		wheel.setIsAutoControlled(this);
+    	wheel.setIsAutoControlled(this);
 		ears.setIsAutoControlled(this);
     	eyes.setIsAutoControlled(this);
 	}
@@ -95,19 +96,64 @@ public class ShowInfoMode extends AutoMode {
 		// タイマーを停止する
 		if(ses[0] == null)	return;
 		ses[0].shutdown();
-    	Log.i(TAG, "showInfoStopped");
+    	Log.i(TAG, "PointOutStopped");
 	}
 	
 
 
 	/** 計測結果提示のタスク **/
     private final Runnable task = new Runnable(){
+    	private boolean isPointingOutSlouching;
+    	private boolean isPointingOutKneeShaking;
+    	private int goal;
+    	private boolean goalReached;
+    	
         @Override
         public void run() {
-        	Log.d("showInfo", "running...");
+        	Log.d("PointOut", "running...");
         	if(!isAuto)	return;
         	
         	float dif = sensor.getPitchDifference();
+        	int tpType = sensor.getNowTpType();
+        	
+        	if(isPointingOutSlouching){			// 猫背指摘モード
+        		if(!isShouching()){	// 解消されたとき
+        			isPointingOutSlouching = false;
+        			goalReached = false;
+        			goal = shoulderCenter;
+        		}
+        		if(goalReached){	// 目的地点についた
+        			
+        		}else{				// 目的地点到達前
+        			
+        		}
+        	}else if(isPointingOutKneeShaking){	// 貧乏揺すり指摘モード
+        		if(goalReached){	// 目的地点についた
+        			
+        		}else{				// 目的地点到達前
+        			
+        		}
+        	}else{								// 平常時
+	        	switch(tpType){
+	        	case TrailPoint.SHOLDER:
+	        	case TrailPoint.BACK:
+	            	// 姿勢が悪い？
+	        		if(isSlouching()){
+	        			startPointOutSlouching();
+	            		break;
+	        		}
+	        		// 悪くなければ↓へ
+	        	default:
+	        		// 貧乏揺すり？
+	        		if(isKneeShaking()){
+	        			startPointOutKneeShaking();
+	        		}else{
+	        			
+	        		}
+	        	}
+        	}
+        	
+        	
         	// 角度の変化を耳で示す
         	ears.changeStateByRad(dif);
         	// 位置の違いを目で示す

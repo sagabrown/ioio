@@ -21,6 +21,7 @@ public class PointTypeAnalyzer {
 				}
 			}
 			int i = 0;
+			for(; i<5 && i<len; i++)	tpList.get(i).type = TrailPoint.LEG;
 			for(; i<maxPointIndex-HALF_SHOLDER_WIDTH && i<len; i++)	tpList.get(i).type = TrailPoint.BACK;
 			for(; i<maxPointIndex+HALF_SHOLDER_WIDTH && i<len; i++)	tpList.get(i).type = TrailPoint.SHOLDER;
 			for(; i<len; i++)	tpList.get(i).type = TrailPoint.ARM;

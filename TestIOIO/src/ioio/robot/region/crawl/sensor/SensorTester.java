@@ -71,6 +71,8 @@ public class SensorTester {
 	private static final float THRESHOLD_BACK2 = 70 * DEG2RAD;
 	private static final float THRESHOLD_ARM1 = 30 * DEG2RAD;
 	private static final float THRESHOLD_ARM2 = 60 * DEG2RAD;
+	private static final float THRESHOLD_LEG1 = 30 * DEG2RAD;
+	private static final float THRESHOLD_LEG2 = 60 * DEG2RAD;
 	
 	
 	public SensorTester(Util util, CrawlRobot parent){
@@ -143,18 +145,25 @@ public class SensorTester {
         		break;
         	case TrailPoint.BACK:
         	case TrailPoint.SHOLDER:
-        		if(dif < -THRESHOLD_BACK2)			util.setText(infoLabel, "Ç§Ç¬Ç‘Çπ");
-        		else if(dif < -THRESHOLD_BACK1)		util.setText(infoLabel, "ëOåXépê®");
-        		else if(dif > THRESHOLD_BACK2)		util.setText(infoLabel, "ã¬å¸ÇØ");
-        		else if(dif > THRESHOLD_BACK1)		util.setText(infoLabel, "å„åXépê®");
-        		else								util.setText(infoLabel, "íºóß"+dif);
+        		if(dif < -THRESHOLD_BACK2)			util.setText(infoLabel, "lying on face");	// Ç§Ç¬Ç‘Çπ
+        		else if(dif < -THRESHOLD_BACK1)		util.setText(infoLabel, "inclining forward");	// ëOåX
+        		else if(dif > THRESHOLD_BACK2)		util.setText(infoLabel, "lying on back");	// ã¬å¸ÇØ
+        		else if(dif > THRESHOLD_BACK1)		util.setText(infoLabel, "inclining backward");	// å„åX
+        		else								util.setText(infoLabel, "standing"+dif);	// íºóß
         		break;
         	case TrailPoint.ARM:
-        		if(dif < -THRESHOLD_ARM2)			util.setText(infoLabel, "òrÇâ∫Ç∞ÇƒÇ¢ÇÈ");
-        		else if(dif < -THRESHOLD_ARM1)		util.setText(infoLabel, "òrÇâ∫Ç∞Ç¨Ç›");
-        		else if(dif > THRESHOLD_ARM2)		util.setText(infoLabel, "òrÇè„Ç∞ÇƒÇ¢ÇÈ");
-        		else if(dif > THRESHOLD_ARM1)		util.setText(infoLabel, "òrÇè„Ç∞Ç¨Ç›");
-        		else								util.setText(infoLabel, "Ç”Ç¬Ç§"+dif);
+        		if(dif < -THRESHOLD_ARM2)			util.setText(infoLabel, "falling");	// â∫Ç∞
+        		else if(dif < -THRESHOLD_ARM1)		util.setText(infoLabel, "falling little");	// â∫Ç∞ãCñ°
+        		else if(dif > THRESHOLD_ARM2)		util.setText(infoLabel, "rising");	// è„Ç∞
+        		else if(dif > THRESHOLD_ARM1)		util.setText(infoLabel, "rising little");	// è„Ç∞ãCñ°
+        		else								util.setText(infoLabel, "standard position"+dif);	// ÉfÉtÉH
+        		break;
+        	case TrailPoint.LEG:
+        		if(dif < -THRESHOLD_LEG2)			util.setText(infoLabel, "falling");	// â∫Ç∞
+        		else if(dif < -THRESHOLD_LEG1)		util.setText(infoLabel, "falling little");	// â∫Ç∞ãCñ°
+        		else if(dif > THRESHOLD_LEG2)		util.setText(infoLabel, "rising");	// è„Ç∞
+        		else if(dif > THRESHOLD_LEG1)		util.setText(infoLabel, "rising little");	// è„Ç∞ãCñ°
+        		else								util.setText(infoLabel, "standard position"+dif);	// ÉfÉtÉH
         		break;
         	}
 		}
@@ -422,6 +431,9 @@ public class SensorTester {
 
 	public int getNowTpType() {
 		return nowTp.type;
+	}
+	public int getNowTpIndex() {
+		return cycleCount;
 	}
 	public float getPitchDifference(){
 		float dif = getPitch()-nowTp.pitch;

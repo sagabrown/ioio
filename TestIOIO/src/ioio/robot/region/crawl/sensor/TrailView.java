@@ -76,6 +76,7 @@ public class TrailView extends GLSurfaceView {
 	public final static float[] BACK_COLOR = {1.0f, 0.7f, 0.0f, 0.8f};
 	public final static float[] SHOLDER_COLOR = {1.0f, 0.2f, 0.2f, 0.8f};
 	public final static float[] ARM_COLOR = {0.5f, 1.0f, 0.0f, 0.8f};
+	public final static float[] LEG_COLOR = {0.5f, 0.0f, 1.0f, 0.8f};
 
     Paint paint;
  
@@ -136,6 +137,7 @@ public class TrailView extends GLSurfaceView {
 			        		if(tp.type == TrailPoint.BACK)			setColor(gl, BACK_COLOR);
 			        		else if(tp.type == TrailPoint.SHOLDER)	setColor(gl, SHOLDER_COLOR);
 			        		else if(tp.type == TrailPoint.ARM)		setColor(gl, ARM_COLOR);
+			        		else if(tp.type == TrailPoint.LEG)		setColor(gl, LEG_COLOR);
 			        		else									setColor(gl, NO_TYPE_COLOR);
 			        	}
 			        	int xr = (int) (scale * tp.xr);

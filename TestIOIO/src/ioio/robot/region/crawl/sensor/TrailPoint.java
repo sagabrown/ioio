@@ -11,6 +11,7 @@ public class TrailPoint {
 	public static final int SHOLDER = 1;
 	public static final int BACK = 2;
 	public static final int ARM = 3;
+	public static final int LEG = 4;
 	
 	public TrailPoint(float xr, float yr, float zr, float xl, float yl, float zl, float azimuth, float pitch, float roll) {
 		this.xr = xr;
