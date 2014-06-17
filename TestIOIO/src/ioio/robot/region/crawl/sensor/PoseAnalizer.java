@@ -32,6 +32,7 @@ public class PoseAnalizer {
     		else if(dif > THRESHOLD_BACK1)		return BACK_BACK1;
     		else								return BACK_STAND;
     	case TrailPoint.ARM:
+    	case TrailPoint.LEG:
     		if(dif < -THRESHOLD_ARM2)			return ARM_DOWN2;
     		else if(dif < -THRESHOLD_ARM1)		return ARM_DOWN1;
     		else if(dif > THRESHOLD_ARM2)		return ARM_UP2;

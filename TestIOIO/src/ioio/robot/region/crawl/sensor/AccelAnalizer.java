@@ -41,7 +41,7 @@ public class AccelAnalizer {
 		}
 	}
 	
-	public int armShakingAnalize(float peak, float peakVal, float range){
+	public int shakingAnalize(float peak, float peakVal, float range){
 		if(range < RANGE_TH_LOW){
 			return ARM_STOPPING;
 		}else if(VAL_TH_LOW < peakVal){
@@ -66,7 +66,8 @@ public class AccelAnalizer {
 			result = walkingAnalize(peak, peakVal, range);
 			break;
 		case TrailPoint.ARM:
-			result = armShakingAnalize(peak, peakVal, range);
+		case TrailPoint.LEG:
+			result = shakingAnalize(peak, peakVal, range);
 			break;
 		default:
 			result = NONE;
