@@ -9,12 +9,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.CharBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import android.app.LocalActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.Handler;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
 import android.widget.SeekBar;
@@ -38,8 +41,23 @@ public class Util {
 		handler.post( new ManageActivityRunnable(0, lam, name, intent) );
 	}
     
+    private String fullDirName;
+    private boolean dirMade;
     public void saveText(Context context, String fname, String text){
-        String filePath = Environment.getExternalStorageDirectory() + "/ioio.robot/" + fname + ".dat";
+    	// サブディレクトリの作成
+    	if(!dirMade){
+    		SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd_HHmmss");
+    		Date now = new Date();
+			String subDirName = "data_"+f.format(now);
+			fullDirName = Environment.getExternalStorageDirectory() + "/ioio.robot/" + subDirName;
+			File dir = new File(fullDirName);
+			if (!dir.exists()) {
+			    dir.mkdirs();
+			}
+			dirMade = true;
+    	}
+    	
+        String filePath = fullDirName + "/" + fname + ".dat";
         String inputText = text;
         File file = new File(filePath);
         file.getParentFile().mkdir();

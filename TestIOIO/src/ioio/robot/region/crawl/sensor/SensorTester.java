@@ -459,6 +459,7 @@ public class SensorTester {
     	String text = sb.toString();
     	Time time = new Time("Asia/Tokyo");
     	time.setToNow();
+    	
     	String fname = "accels/accels_"+time.year+"_"+(time.month+1)+"_"+time.monthDay+"_"
     					+time.hour+"_"+time.minute+"_"+time.second;
     	util.saveText(context, fname, text);
