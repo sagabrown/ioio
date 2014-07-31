@@ -7,7 +7,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -137,8 +136,6 @@ public class AccelView extends View {
         // Viewの描画サイズを指定する
         setMeasuredDimension(width,2*halfHeight);
     }
-	
-
     
     public void addAccelNorm(float accel){
     	//Log.i("TestDataAdd", "add "+accel);

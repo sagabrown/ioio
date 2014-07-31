@@ -7,6 +7,7 @@ import ioio.robot.robot.CrawlRobot;
 import ioio.robot.util.Util;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,15 +17,19 @@ import trash.shocksensor.ShockSensor;
 import trash.shocksensor.ShockSensorListener;
 import android.content.Context;
 import android.graphics.Color;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 public class SensorTester {
 	Util util;
@@ -49,6 +54,8 @@ public class SensorTester {
 	float x2, y2, z2;
 	float azimuth,pitch,roll;	// rad
 	TrailPoint nowTp;
+
+    private ArrayList<Integer[]> accelsList;
 	
 	TextView azimuthText;
 	TextView pitchText;
@@ -59,9 +66,10 @@ public class SensorTester {
 	TextView valueZ;
 	
 	//ToggleButton logging;
+	private ToggleButton accel_log;
 	Button startButton, stopButton, clearButton, setButton;
 	TextView infoLabel, shockSensorLabel;
-	private boolean trailFixed, isLogging;
+	private boolean trailFixed, isLogging, accel_logging;
 	private int cycleCount;
 	private int shockCount;
 	
@@ -83,6 +91,7 @@ public class SensorTester {
 		sensorModule = new ArduinoSensor();
 		initInfo();
 		isLogging = false;
+		accelsList = new ArrayList<Integer[]>();
 	}
 	
 	private void initInfo(){
@@ -145,6 +154,7 @@ public class SensorTester {
 			util.setText(valueX, String.format("%d", accel[0]));
 			util.setText(valueY, String.format("%d", accel[1]));
 			util.setText(valueZ, String.format("%d", accel[2]));
+			if(accel_logging)	addAccels(accel);
 			
 			// ”»’è
 			util.setText(infoLabel,
@@ -249,7 +259,7 @@ public class SensorTester {
 		return layout;
 	}
 	
-	public LinearLayout getTrailControllerLayout(Context context){
+	public LinearLayout getTrailControllerLayout(final Context context){
 		LinearLayout buttonLayout = new LinearLayout(context);
 		buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
 		buttonLayout.setPadding(0, 1, 0, 1);
@@ -326,6 +336,21 @@ public class SensorTester {
 			}
 		});
 		buttonLayout.addView(clearButton);
+		
+
+		accel_log = new ToggleButton(context);
+		accel_log.setOnCheckedChangeListener(new OnCheckedChangeListener(){
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				if(isChecked){
+					initAccels();
+					accel_logging = true;
+				}else{
+					accel_logging = false;
+					flushAccels(context);
+				}
+			}
+		});
+		buttonLayout.addView(accel_log);
 		
 		return buttonLayout;
 	}
@@ -411,6 +436,35 @@ public class SensorTester {
 		boolean success = sensorModule.getData(attitude, accel);
 		return success;
 	}
+	
+
+	public void initAccels(){
+    	synchronized (accelsList) {
+    		accelsList.clear();
+    	}
+	}
+    public void addAccels(int[] accel){
+    	Integer[] accels = {accel[0], accel[1], accel[2]};
+    	synchronized (accelsList) {
+    		accelsList.add(accels);
+    	}
+    }
+    public void flushAccels(Context context){
+    	StringBuilder sb = new StringBuilder();
+    	synchronized (accelsList) {
+        	for(Integer[] a : accelsList){
+        		sb.append(a[0]+" "+a[1]+" "+a[2]+"\n");
+        	}
+		}
+    	String text = sb.toString();
+    	Time time = new Time("Asia/Tokyo");
+    	time.setToNow();
+    	String fname = "accels/accels_"+time.year+"_"+(time.month+1)+"_"+time.monthDay+"_"
+    					+time.hour+"_"+time.minute+"_"+time.second;
+    	util.saveText(context, fname, text);
+    	initAccels();
+    }
+    
 	
 	public void setSpeed(float speed){
 		// do nothing;
