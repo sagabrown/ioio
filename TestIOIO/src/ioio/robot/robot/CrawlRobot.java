@@ -58,6 +58,12 @@ public class CrawlRobot implements Robot {
 	private final static String TAG = "CrawlRobot";
 	private Util util;
 	
+	private final static boolean usingMode = false;
+	private final static boolean gettingTrail = false;
+	private final static String FOR_TEXT = "前進";
+	private final static String BACK_TEXT = "後退";
+	private final static String STOP_TEXT = "○";
+	
 	public Wheel wheel;
 	public Ears ears;
 	public Eyes eyes;
@@ -124,16 +130,13 @@ public class CrawlRobot implements Robot {
         // オート操作のレイアウトを登録
         modeSelectLayout = getAutoLayout(parent);
         layout.addView(modeSelectLayout);
-
-        // 表示きりかえ+簡易操作のレイアウトを登録
-        layout.addView(getShowModeLayout(parent));
+        if(!usingMode)	modeSelectLayout.setVisibility(View.GONE);
         
-        // マニュアル操作パネルを登録
+        // マニュアル操作パネルを作成
         manualContollerLayout = new LinearLayout(parent);
         manualContollerLayout.setOrientation(LinearLayout.VERTICAL);
         manualContollerLayout.setBackgroundColor(Color.DKGRAY);
 		manualContollerLayout.setVisibility(View.GONE);
-        layout.addView(manualContollerLayout);
         // - emotionの操作パネルを登録
         manualContollerLayout.addView(getEmoOperationLayout(parent));
         // - くるまの操作パネルを登録
@@ -143,27 +146,35 @@ public class CrawlRobot implements Robot {
         // - 目の操作パネルを登録
         manualContollerLayout.addView(eyes.getLayout(parent));
 
+        // 表示きりかえ+簡易操作のレイアウトを登録
+        layout.addView(getShowModeLayout(parent));
+        // マニュアル操作パネルを登録
+        layout.addView(manualContollerLayout);
+
         // trail controlパネルの登録
         trailControllerLayout = sensor.getTrailControllerLayout(parent);
         layout.addView(trailControllerLayout);
+        if(!gettingTrail)	trailControllerLayout.setVisibility(View.GONE);
         
 		// TrailViewとセンサ表示を重ねて表示
 		FrameLayout sensorLayout = new FrameLayout(parent);
+        
+			// TrailView表示のパネルを登録
+	        trailViewLayout = sensor.getTrailViewLayout(parent);
+	        sensorLayout.addView(trailViewLayout);
+	        
+			// センサーテキスト表示のパネルを登録
+			sensorTextLayout = new LinearLayout(parent);
+			sensorTextLayout.setOrientation(LinearLayout.VERTICAL);
+			sensorTextLayout.setPadding(10, 5, 10, 0);
+			sensorLayout.addView(sensorTextLayout);
+			// - スピードメータのパネルを登録
+			sensorTextLayout.addView(speedMater.getLayout(parent));
+			// - 9軸センサーのパネルを登録
+			sensorTextLayout.addView(sensor.getTextLayout(parent));
+		
 		layout.addView(sensorLayout);
-        
-		// TrailView表示のパネルを登録
-        trailViewLayout = sensor.getTrailViewLayout(parent);
-        sensorLayout.addView(trailViewLayout);
-        
-		// センサーテキスト表示のパネルを登録
-		sensorTextLayout = new LinearLayout(parent);
-		sensorTextLayout.setOrientation(LinearLayout.VERTICAL);
-		sensorTextLayout.setPadding(10, 5, 10, 0);
-		sensorLayout.addView(sensorTextLayout);
-		// - スピードメータのパネルを登録
-        sensorTextLayout.addView(speedMater.getLayout(parent));
-		// - 9軸センサーのパネルを登録
-        sensorTextLayout.addView(sensor.getTextLayout(parent));
+        if(!gettingTrail)	sensorLayout.setVisibility(View.GONE);
 		
 		return layout;
 	}
@@ -188,13 +199,13 @@ public class CrawlRobot implements Robot {
 				}
 			}
         });
-        manualShowCheck.setChecked(false);
         manualShowCheck.setBackgroundColor(Color.DKGRAY);
         layout.addView(manualShowCheck);
+        manualShowCheck.setChecked(true);
 
 		// backボタン
 		backButton = new Button(parent);
-		backButton.setText("<");
+		backButton.setText(BACK_TEXT);
 		backButton.setOnClickListener(new OnClickListener(){
 			@Override
 			public void onClick(View arg0) {
@@ -208,7 +219,7 @@ public class CrawlRobot implements Robot {
 		layout.addView(backButton);
 		// stopボタン
 		stopButton = new Button(parent);
-		stopButton.setText("○");
+		stopButton.setText(STOP_TEXT);
 		stopButton.setOnClickListener(new OnClickListener(){
 			@Override
 			public void onClick(View arg0) {
@@ -218,7 +229,7 @@ public class CrawlRobot implements Robot {
 		layout.addView(stopButton);
 		// forwardボタン
 		forwardButton = new Button(parent);
-		forwardButton.setText(">");
+		forwardButton.setText(FOR_TEXT);
 		forwardButton.setOnClickListener(new OnClickListener(){
 			@Override
 			public void onClick(View arg0) {

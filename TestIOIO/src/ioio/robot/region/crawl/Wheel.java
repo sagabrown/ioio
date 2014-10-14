@@ -35,7 +35,7 @@ public class Wheel extends Region {
 	public Wheel(Util util, double[] motorInitState) {
 		this.util = util;
 		motor = new DCMotor[motorNum];
-		motor[0] = new DCMotor(util, "Wheel", motorInitState[0]);
+		motor[0] = new DCMotor(util, "Legs", motorInitState[0]);
 		part = motor;
 	}
 
