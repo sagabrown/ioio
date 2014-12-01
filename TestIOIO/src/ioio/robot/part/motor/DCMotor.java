@@ -83,7 +83,7 @@ public class DCMotor implements Motor {
 			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				changeState( (float)progress / seekBar.getMax() * 2.0f - 1.0f );
+				changeStateFromSeekBar( (float)progress / seekBar.getMax() * 2.0f - 1.0f );
 			}
 		});
 		util.setProgress(seekBar, (int)(getState() * seekBar.getMax()));
@@ -127,12 +127,16 @@ public class DCMotor implements Motor {
 		}
 	}
 	
-	/** stateを変更する **/
+	/** 内部命令からstateを変更する(seekBarへ依頼) **/
 	public void changeState(float state){
+		// seekBarを動かす
+		util.setProgress(seekBar, (int)((state+1.0)*seekBar.getMax()*0.5));
+	}
+	/** seekBarがstateを変更するメソッド **/
+	private void changeStateFromSeekBar(float state){
 		this.state = state;
 		changeDuty();	// pwm値の変更
 		util.setText(label, name+": "+state);
-		if(isAutoControlled)	seekBar.setProgress((int)((state+1.0)*seekBar.getMax()*0.5));
 	}
 	
 	public void activate() throws ConnectionLostException {

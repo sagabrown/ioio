@@ -38,6 +38,8 @@ public class SensorTester {
 	protected final static float RAD2DEG = (float)(180/Math.PI);
 	protected final static float DEG2RAD = (float)(Math.PI/180.0);
     private ScheduledExecutorService[] ses = null;
+    
+    private final static boolean saveAccelsLog = false;
 	
     private ShockSensor shockSensor;
     private ArduinoSensor sensorModule;
@@ -337,7 +339,7 @@ public class SensorTester {
 		});
 		buttonLayout.addView(clearButton);
 		
-
+		// ログ出力ボタン
 		accel_log = new ToggleButton(context);
 		accel_log.setOnCheckedChangeListener(new OnCheckedChangeListener(){
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -351,6 +353,7 @@ public class SensorTester {
 			}
 		});
 		buttonLayout.addView(accel_log);
+		if(!saveAccelsLog)	accel_log.setVisibility(View.GONE);
 		
 		return buttonLayout;
 	}

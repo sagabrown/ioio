@@ -86,7 +86,7 @@ public abstract class ServoMotor implements Motor {
 			public void onStopTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onStartTrackingTouch(SeekBar seekBar) {/* do nothing */}
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				changeState( (float) (double)progress / seekBar.getMax() );
+				changeStateFromSeekBar( (float) (double)progress / seekBar.getMax() );
 			}
 		});
 		util.setProgress(seekBar, (int)(getState() * seekBar.getMax()));
@@ -108,23 +108,26 @@ public abstract class ServoMotor implements Motor {
 			}
 		}
 	}
-	
-	/** stateを変更する **/
+
+	/** 内部命令からstateを変更する(seekBarへ依頼) **/
 	public void changeState(float state){
-		this.state = state;
-		changeDuty();	// pwm値の変更
-		util.setText(label, name+"("+radToDeg(minThetaLimit)+" ~ "+radToDeg(maxThetaLimit)+")"+": "+radToDeg(ratioToTheta(state)));
-		//if(isAutoControlled)	seekBar.setProgress((int)((state+1.0)*seekBar.getMax()*0.5));
+		util.setProgress(seekBar, (int)(state*seekBar.getMax()));
 	}
-	/** radからstateを変更する **/
+	/** 内部命令からradでstateを変更する **/
 	public void changeStateByRad(float rad){
 		changeState((float)thetaToRatio(rad));
+	}
+	/** seekBarがstateを変更するメソッド **/
+	public void changeStateFromSeekBar(float state){
+		this.state = state;
+		changeDuty();	// pwm値の変更
+		util.setText(label, name+"("+radToDeg(minThetaLimit)+" ~ "+radToDeg(maxThetaLimit)+" deg)"+": "+radToDeg(ratioToTheta(state)));
 	}
 	
 	public void activate() throws ConnectionLostException {
 		isActive = true;
 		changeDuty();
-		util.setEnabled(seekBar, true);
+		if(!isAutoControlled)	util.setEnabled(seekBar, true);
 	}
 	public void disactivate() throws ConnectionLostException {
 		//if(pin!=null)	pin.setDutyCycle((float) ratioToDuty(initState));
@@ -213,5 +216,6 @@ public abstract class ServoMotor implements Motor {
 	/** Setter **/
 	public void setIsAutoControlled(boolean isAutoControlled){
 		this.isAutoControlled = isAutoControlled;
+		if(isActive)	util.setEnabled(seekBar, !isAutoControlled);
 	}
 }

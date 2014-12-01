@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="servo_entries_list_preference">
+        <item>Blue Arrow BA TS</item>
+        <item>SG90</item>
+        <item>HS322HD</item>
+    </string-array>
+    <string-array name="servo_entryvalues_list_preference">
+        <item>babt</item>
+        <item>sg90</item>
+        <item>hs322hd</item>
+    </string-array>
+</resources>

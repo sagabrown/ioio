@@ -37,13 +37,17 @@ public class Util {
     public void setEnabled(View view, boolean enabled){
 		handler.post( new SetViewRunnable(view, enabled) );
 	}
+    public void setVisibility(View view, int visibility){
+		handler.post( new SetViewRunnable(view, visibility) );
+	}
     public void startActivity(LocalActivityManager lam, String name, Intent intent){
 		handler.post( new ManageActivityRunnable(0, lam, name, intent) );
 	}
     
+    /** データをテキストファイルに出力 **/
     private String fullDirName;
     private boolean dirMade;
-    public void saveText(Context context, String fname, String text){
+    public int saveText(Context context, String fname, String text){
     	// サブディレクトリの作成
     	if(!dirMade){
     		SimpleDateFormat f = new SimpleDateFormat("yyyyMMdd_HHmmss");
@@ -77,8 +81,12 @@ public class Util {
           }
         } catch (FileNotFoundException e) {
           e.printStackTrace();
+          return -1;
         } catch (IOException e) {
           e.printStackTrace();
+          return -1;
         }
+        
+        return 0;
     }
 }

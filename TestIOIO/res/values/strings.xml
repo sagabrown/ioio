@@ -3,4 +3,12 @@
     <string name="controller">Controller</string>
     <string name="app_name">IOIO ROBOT v2.0</string>
     <string name="pwm">motor ctrl</string>
+    
+    <string name="pref_display">display</string>
+    <string name="pref_modeSelect">modeSelect</string>
+    <string name="pref_trailSelect">trailSelect</string>
+    <string name="pref_parts">parts</string>
+    <string name="pref_ears">ears</string>
+    <string name="pref_distPerCycle">distPerCycle</string>
+    <string name="pref_numOfSlit">numOfSlit</string>
 </resources>

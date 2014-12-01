@@ -22,19 +22,20 @@ public class SpeedMater {
 	private long startTime;
 	private DigitalInput cycleIn;
     private int cycleCount, tempCount;
-    private int slitNum = 2;	// スリットの数
-	private int distPerCycle = 48;	// モーター1回転で進む距離[mm]
 	private boolean foward = true;
 	private float speed;  // 回/秒
     private LinearLayout layout;
     private TextView countView, speedView, timeView;
     private ScheduledExecutorService[] ses;
     private Robot parent;
+	private int distPerCycle;	// モーター1回転で進む距離[mm]
+    private int slitNum;	// スリットの数
 
     
-    public SpeedMater(Util util, int distPerCycle, Robot parent) {
+    public SpeedMater(Util util, int distPerCycle, int slitNum, Robot parent) {
 		this.util = util;
 		this.distPerCycle = distPerCycle;
+		this.slitNum = slitNum;
 		this.parent = parent;
 	}
 
@@ -162,4 +163,14 @@ public class SpeedMater {
         	util.setText(timeView, "time: "+String.format("%.2f", ((time-startTime)*0.001))+" s");
         }
     };
+
+
+	public void setDistPerCycle(int distPerCycle) {
+		this.distPerCycle = distPerCycle;
+	}
+
+
+	public void setSlitNum(int slitNum) {
+		this.slitNum = slitNum;
+	}
 }

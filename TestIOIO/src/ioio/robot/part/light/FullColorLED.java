@@ -25,14 +25,15 @@ public class FullColorLED implements PinOpenable {
 	private String name;
 	private boolean isAutoControlled;
 	
-	public FullColorLED(Util util, String name) {
+	public FullColorLED(Util util, String name, float[] initState) {
 		this.util = util;
 		this.name = name;
 		color = new float[3];
 		led = new LED[3];
-		led[0] = new LED_R(util, "R");	// R
-		led[1] = new LED_G(util, "G");	// G
-		led[2] = new LED_B(util, "B");	// B
+		if(initState.length < 3)	initState = new float[3];
+		led[0] = new LED_R(util, "R", initState[0]);	// R
+		led[1] = new LED_G(util, "G", initState[1]);	// G
+		led[2] = new LED_B(util, "B", initState[2]);	// B
 		init();
 	}
 	

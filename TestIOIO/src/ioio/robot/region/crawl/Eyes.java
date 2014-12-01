@@ -14,7 +14,7 @@ import ioio.robot.util.Util;
 
 public class Eyes extends Region {
 	private final static String TAG = "Eyes";
-	private final static double[] defaultLedInitState = {0f};
+	private final static float[][] defaultLedInitState = {{0f, 1f, 0f}};
 
 	private FullColorLED[] led;
 	private int ledNum = defaultLedInitState.length;
@@ -28,10 +28,11 @@ public class Eyes extends Region {
 	}
 	
 	/** 初期化つきコンストラクタ **/
-	public Eyes(Util util, double[] ledInitState) {
+	public Eyes(Util util, float[][] ledInitState) {
 		this.util = util;
 		led = new FullColorLED[ledNum];
-		led[0] = new FullColorLED(util, "Eyes");
+		if(ledInitState.length < 1)	ledInitState = new float[ledNum][3];
+		led[0] = new FullColorLED(util, "Eyes", ledInitState[0]);
 		for( FullColorLED l : led )	l.init();
 		part = led;
 	}

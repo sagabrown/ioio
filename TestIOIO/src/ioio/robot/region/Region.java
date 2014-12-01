@@ -66,8 +66,8 @@ public abstract class Region {
 			isAuto = false;
 		}else{
 			isAuto = true;
-			setOwner(mode);
 		}
+		setOwner(mode);
 		for(PinOpenable p : part)	p.setIsAutoControlled(isAuto);
 	}
 	

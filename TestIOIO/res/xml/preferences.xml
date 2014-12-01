@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen 
+  xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:key="@string/pref_display" android:title="Display">
+		<CheckBoxPreference android:key="@string/pref_modeSelect" android:title="Mode Select"/>
+		<CheckBoxPreference android:key="@string/pref_trailSelect" android:title="Trail Control / View"/>
+	</PreferenceCategory>
+	<PreferenceCategory android:key="@string/pref_parts" android:title="Parts (need relaunch)">
+		<ListPreference android:key="@string/pref_ears" android:title="Ears" 
+		    android:entryValues="@array/servo_entryvalues_list_preference" 
+		    android:entries="@array/servo_entries_list_preference"/>
+		<EditTextPreference android:key="@string/pref_distPerCycle" android:title="Dist Per Cycle" /><EditTextPreference android:key="@string/pref_numOfSlit" android:title="Num of Slit on Speed Mater"/>
+		
+	</PreferenceCategory>
+</PreferenceScreen>

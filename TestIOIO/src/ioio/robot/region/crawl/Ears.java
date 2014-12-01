@@ -3,6 +3,7 @@ package ioio.robot.region.crawl;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import ioio.robot.part.motor.BlueArrowBA_TS;
 import ioio.robot.part.motor.SG90;
 import ioio.robot.region.Region;
 import ioio.robot.util.Util;
@@ -15,7 +16,7 @@ public class Ears extends Region {
 	private final static String TAG = "Ears";
 
 	private final static float EAR_FORWARD = 0.05f;
-	private final static float EAR_INIT = 0.4f;
+	private final static float EAR_INIT = 0.5f;
 	private final static float EAR_BACKWARD = 0.8f;
 	private final static float EAR_DD = 0.02f;
 	private final static int EAR_SLEEP = 20;
@@ -23,7 +24,7 @@ public class Ears extends Region {
 	private final static double[] defaultMotorInitState = {0.0};
 	private final static int motorNum = defaultMotorInitState.length;
 	
-	private SG90[] motor;
+	private BlueArrowBA_TS[] motor;
 	private LinearLayout layout;
 	
 	boolean alreadySwinging = false;
@@ -36,8 +37,8 @@ public class Ears extends Region {
 	/** 初期化つきコンストラクタ **/
 	public Ears(Util util, double[] motorInitState) {
 		this.util = util;
-		motor = new SG90[motorNum];
-		motor[0] = new SG90(util, "Ears", motorInitState[0]);
+		motor = new BlueArrowBA_TS[motorNum];
+		motor[0] = new BlueArrowBA_TS(util, "Ears", motorInitState[0]);
 		part = motor;
 	}
 	

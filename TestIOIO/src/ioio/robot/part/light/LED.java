@@ -33,10 +33,10 @@ public abstract class LED implements PinOpenable {
 	private String name;
 	private boolean isAutoControlled;
 	
-	public LED(Util util, String name) {
+	public LED(Util util, String name, float initState) {
 		this.util = util;
 		this.name = name;
-		this.initState = 0f;
+		this.initState = initState;
 		setSpec();
 		init();
 	}
@@ -106,7 +106,7 @@ public abstract class LED implements PinOpenable {
 			}
 		}
 	}
-	
+
 	/** state‚ğ•ÏX‚·‚é **/
 	public void changeState(float state, boolean fromUser){
 		this.state = state;

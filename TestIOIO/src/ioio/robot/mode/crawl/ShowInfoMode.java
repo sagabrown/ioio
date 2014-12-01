@@ -90,6 +90,7 @@ public class ShowInfoMode extends AutoMode {
 		if(!isAuto)	return;
 		isAuto = false;
 		robot.stand();
+    	wheel.setIsAutoControlled(null);
 		ears.setIsAutoControlled(null);
 		eyes.setIsAutoControlled(null);
 

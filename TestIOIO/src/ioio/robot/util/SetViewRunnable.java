@@ -13,6 +13,7 @@ public class SetViewRunnable implements Runnable {
 	private int progress;
 	private View view;
 	private boolean enabled;
+	private int visibility;
 	
 	/* textView */
 	SetViewRunnable( TextView view, String string ){
@@ -32,6 +33,12 @@ public class SetViewRunnable implements Runnable {
 		this.view = view;
 		this.enabled = enabled;
 	}
+	/* visibility */
+	SetViewRunnable( View view, int visibility ){
+		mode = 3;
+		this.view = view;
+		this.visibility = visibility;
+	}
 	public void run(){
 		switch(mode){
 		case 0:
@@ -42,6 +49,9 @@ public class SetViewRunnable implements Runnable {
 			break;
 		case 2:
 			view.setEnabled(enabled);
+			break;
+		case 3:
+			view.setVisibility(visibility);
 			break;
 		}
 	}

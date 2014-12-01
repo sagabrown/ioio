@@ -9,9 +9,15 @@ import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.*;
@@ -19,6 +25,7 @@ import android.widget.*;
 
 public class MainActivity extends IOIOActivity {
 	private Util util;
+	private SharedPreferences sharedPreferences;
 	private ToggleButton button_;
 	private Robot robot_;
 
@@ -30,9 +37,10 @@ public class MainActivity extends IOIOActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		util = new Util(new Handler());
+		sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		//robot_ = new TEROOS(util);
-		robot_ = new CrawlRobot(util);
+		robot_ = new CrawlRobot(util, sharedPreferences);
 		
         /* アクティビティビューにレイアウトをセットする　*/
         setContentView(R.layout.controller);
@@ -64,6 +72,23 @@ public class MainActivity extends IOIOActivity {
 	public void onPause(){
 		super.onPause();
 		robot_.onPause();
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.optionsmenu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()){
+		case R.id.settings:
+			startActivity(new Intent(this, Preferences.class));
+			return true;
+		}
+		return false;
 	}
 
 	/**

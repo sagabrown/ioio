@@ -10,6 +10,8 @@ import android.app.LocalActivityManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.view.Window;
 
@@ -44,6 +46,16 @@ public class MainActivityGroup extends ActivityGroup {
 	    group.addView(window.getDecorView());
 	    // フィールドに保持
 	    activities.add(lam.getActivity(name));
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	return getLocalActivityManager().getCurrentActivity().onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+    	return getLocalActivityManager().getCurrentActivity().onMenuItemSelected(featureId, item);
     }
     
 }

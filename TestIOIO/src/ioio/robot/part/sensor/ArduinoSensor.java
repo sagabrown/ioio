@@ -22,7 +22,7 @@ public class ArduinoSensor {
 	private final static String TAG = "ArduinoSensor";
 	
 	private boolean isReading;
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	
     
 	// ‰Šú‰»(Ú‘±‚·‚é‚½‚Ñ‚ÉŒÄ‚Ño‚·)

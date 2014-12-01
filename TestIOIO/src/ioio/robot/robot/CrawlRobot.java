@@ -10,6 +10,7 @@ import ioio.lib.api.DigitalInput;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.MainActivity;
+import ioio.robot.R;
 import ioio.robot.mode.crawl.AutoEmoMode;
 import ioio.robot.mode.crawl.PointOutMode;
 import ioio.robot.mode.crawl.ShowInfoMode;
@@ -29,8 +30,10 @@ import ioio.robot.region.crawl.sensor.TrailPoint;
 import ioio.robot.region.crawl.sensor.TrailView;
 import ioio.robot.util.Util;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -52,16 +55,20 @@ pin 5		: サーボモータ
 pin 6		: スピーカー
 pin 7		: 回転数入力
 pin 10-12	: LED
+pin 13, 14	: リミットスイッチ
 **/
 
 public class CrawlRobot implements Robot {
 	private final static String TAG = "CrawlRobot";
 	private Util util;
+	private SharedPreferences sharedPreferences;
 	
-	private final static boolean usingMode = false;
-	private final static boolean gettingTrail = false;
-	private final static String FOR_TEXT = "前進";
-	private final static String BACK_TEXT = "後退";
+	// settingで読み込むもの
+	private boolean usingMode = true;
+	private boolean gettingTrail = true;
+	
+	private final static String FOR_TEXT = " > f";
+	private final static String BACK_TEXT = "b < ";
 	private final static String STOP_TEXT = "○";
 	
 	public Wheel wheel;
@@ -74,7 +81,9 @@ public class CrawlRobot implements Robot {
 	
 	private SpeedMater speedMater;
 	public SensorTester sensor;
+    // 基本的には設定から読み込む
 	private int distPerCycle = 48;	// モーター1回転で進む距離[mm]
+	private int slitNum = 4;
 	
 	private TestMode testMode;
 	private AutoEmoMode autoEmoMode;
@@ -83,20 +92,22 @@ public class CrawlRobot implements Robot {
 	
 	private LinearLayout layout;
 	private LinearLayout modeSelectLayout, manualContollerLayout, sensorTextLayout, trailControllerLayout, trailViewLayout;
+	private FrameLayout sensorLayout;
 	private ToggleButton autoButton, autoEmoButton, showInfoButton, pointOutButton;
 	private Button backButton, forwardButton, stopButton;
 	private Button[] emoButton;
     private boolean isActive, isAuto;
 	
 	/** コンストラクタ **/
-	public CrawlRobot(Util util) {
+	public CrawlRobot(Util util, SharedPreferences sharedPreferences) {
 		super();
 		this.util = util;
+		this.sharedPreferences = sharedPreferences;
 		
 		wheel = new Wheel(util);
 		ears = new Ears(util);
 		eyes = new Eyes(util);
-		speedMater = new SpeedMater(util, distPerCycle, this);
+		speedMater = new SpeedMater(util, distPerCycle, slitNum, this);
 
 		testMode = new TestMode();
 		autoEmoMode = new AutoEmoMode();
@@ -130,15 +141,12 @@ public class CrawlRobot implements Robot {
         // オート操作のレイアウトを登録
         modeSelectLayout = getAutoLayout(parent);
         layout.addView(modeSelectLayout);
-        if(!usingMode)	modeSelectLayout.setVisibility(View.GONE);
         
         // マニュアル操作パネルを作成
         manualContollerLayout = new LinearLayout(parent);
         manualContollerLayout.setOrientation(LinearLayout.VERTICAL);
         manualContollerLayout.setBackgroundColor(Color.DKGRAY);
 		manualContollerLayout.setVisibility(View.GONE);
-        // - emotionの操作パネルを登録
-        manualContollerLayout.addView(getEmoOperationLayout(parent));
         // - くるまの操作パネルを登録
         manualContollerLayout.addView(wheel.getLayout(parent), LayoutParams.FILL_PARENT);
         // - 耳の操作パネルを登録
@@ -146,6 +154,8 @@ public class CrawlRobot implements Robot {
         // - 目の操作パネルを登録
         manualContollerLayout.addView(eyes.getLayout(parent));
 
+        // emotionの操作パネルを登録
+        layout.addView(getEmoOperationLayout(parent));
         // 表示きりかえ+簡易操作のレイアウトを登録
         layout.addView(getShowModeLayout(parent));
         // マニュアル操作パネルを登録
@@ -154,10 +164,9 @@ public class CrawlRobot implements Robot {
         // trail controlパネルの登録
         trailControllerLayout = sensor.getTrailControllerLayout(parent);
         layout.addView(trailControllerLayout);
-        if(!gettingTrail)	trailControllerLayout.setVisibility(View.GONE);
         
 		// TrailViewとセンサ表示を重ねて表示
-		FrameLayout sensorLayout = new FrameLayout(parent);
+		sensorLayout = new FrameLayout(parent);
         
 			// TrailView表示のパネルを登録
 	        trailViewLayout = sensor.getTrailViewLayout(parent);
@@ -174,7 +183,6 @@ public class CrawlRobot implements Robot {
 			sensorTextLayout.addView(sensor.getTextLayout(parent));
 		
 		layout.addView(sensorLayout);
-        if(!gettingTrail)	sensorLayout.setVisibility(View.GONE);
 		
 		return layout;
 	}
@@ -423,10 +431,36 @@ public class CrawlRobot implements Robot {
 		sensor.setSpeed(speed);
 	}
 	
-
+	
+	/** 設定の反映 **/
+	private void applySettings(){
+		// 自動制御モードを使うか
+		usingMode = sharedPreferences.getBoolean("modeSelect", true);
+		if(usingMode)	modeSelectLayout.setVisibility(View.VISIBLE);
+		else			modeSelectLayout.setVisibility(View.GONE);
+		
+		// 経路情報を使うか
+		gettingTrail = sharedPreferences.getBoolean("trailSelect", true);
+        if(gettingTrail){
+        	trailControllerLayout.setVisibility(View.VISIBLE);
+        	sensorLayout.setVisibility(View.VISIBLE);
+        }else{
+        	trailControllerLayout.setVisibility(View.GONE);
+        	sensorLayout.setVisibility(View.GONE);
+        }
+        
+        // 一回転で進む距離とスリットの数
+        try{
+        	speedMater.setDistPerCycle(sharedPreferences.getInt("distPerCycle", distPerCycle));
+        	speedMater.setSlitNum(sharedPreferences.getInt("slitNum", slitNum));
+        }catch(ClassCastException e){
+        	e.printStackTrace();
+        }
+	}
 
 	@Override
 	public void onResume() {
+		applySettings();
 		sensor.onResume();
 	}
 	@Override

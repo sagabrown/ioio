@@ -4,8 +4,8 @@ import ioio.robot.util.Util;
 
 public class LED_G extends LED {
 
-	public LED_G(Util util, String name) {
-		super(util, name);
+	public LED_G(Util util, String name, float initState) {
+		super(util, name, initState);
 	}
 
 	@Override
