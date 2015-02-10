@@ -1,5 +1,7 @@
 package ioio.robot.region.crawl.sensor;
 
+import android.util.Log;
+
 public class PoseAnalizer {
 	protected final static float DEG2RAD = (float)(Math.PI/180.0);
 	
@@ -56,6 +58,20 @@ public class PoseAnalizer {
 		case ARM_DOWN1:		return "falling little";
 		case ARM_DOWN2:		return "falling";
 		default:			return "--";
+		}
+	}
+	
+	public boolean isSlouching(int pointType, float dif){
+		if(pointType != TrailPoint.BACK && pointType != TrailPoint.SHOLDER)	return false;
+		else{
+			int result = poseAnalize(pointType, dif);
+			switch(result){
+			case BACK_STAND:
+			//case BACK_FOR1:
+			//case BACK_BACK1:
+				return false;
+			default:			return true;
+			}
 		}
 	}
 }

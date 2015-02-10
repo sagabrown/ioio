@@ -83,5 +83,26 @@ public class AccelAnalizer {
 		default:			return "--";
 		}
 	}
+	
+	public boolean isKneeShaking(int pointType, float peak, float peakVal, float range){
+		int result;
+		switch(pointType){
+		case TrailPoint.BACK:
+		case TrailPoint.SHOLDER:
+		case TrailPoint.LEG:
+			result = shakingAnalize(peak, peakVal, range);
+			break;
+		default:
+			return false;
+		}
+		
+		switch(result){
+		case ARM_SHAKING_FAST:
+		case ARM_SHAKING:
+			return true;
+		default:
+			return false;
+		}
+	}
 
 }

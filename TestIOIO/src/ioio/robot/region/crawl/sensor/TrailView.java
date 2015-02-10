@@ -32,7 +32,7 @@ public class TrailView extends GLSurfaceView {
 	private static final int halfW = 2;
     private static final int scale = 1;
     
-	private float speed = 4;
+	private float speed = 2;
     private ArrayList<TrailPoint> tpList;
     private TrailPoint lastTp;
 	private float azimuth, pitch, roll;
@@ -102,7 +102,8 @@ public class TrailView extends GLSurfaceView {
         super(context);
         paint = new Paint();
         initTrail();
-        lookX = lookY = lookZ = 0f;
+        lookX = lookY = 0f;
+        lookZ = 0.5f;
         
         setRenderer(new Renderer(){
 			@Override
@@ -420,6 +421,7 @@ public class TrailView extends GLSurfaceView {
 		if(tag==0)		sb.setProgress(max/4);
 		else if(tag==1)	sb.setProgress(max/4);
 		else if(tag==2)	sb.setProgress(max*3/4);
+		else if(tag==5)	sb.setProgress(max*3/5);
 		else			sb.setProgress(max/2);
 		
 		TextView label = new TextView(context);

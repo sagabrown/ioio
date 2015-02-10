@@ -39,4 +39,8 @@ public abstract class AutoMode {
 	public Layout getExtraLayout() {
 		return null;
 	}
+	
+	public void onPause(){
+		stop();
+	}
 }

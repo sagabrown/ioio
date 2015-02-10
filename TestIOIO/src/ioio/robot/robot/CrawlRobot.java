@@ -67,8 +67,8 @@ public class CrawlRobot implements Robot {
 	private boolean usingMode = true;
 	private boolean gettingTrail = true;
 	
-	private final static String FOR_TEXT = " > f";
-	private final static String BACK_TEXT = "b < ";
+	private final static String FOR_TEXT = "for";
+	private final static String BACK_TEXT = "back";
 	private final static String STOP_TEXT = "○";
 	
 	public Wheel wheel;
@@ -108,6 +108,7 @@ public class CrawlRobot implements Robot {
 		ears = new Ears(util);
 		eyes = new Eyes(util);
 		speedMater = new SpeedMater(util, distPerCycle, slitNum, this);
+		sensor = new SensorTester(util, this);
 
 		testMode = new TestMode();
 		autoEmoMode = new AutoEmoMode();
@@ -128,7 +129,8 @@ public class CrawlRobot implements Robot {
 		// スピードメータのセット
 		wheel.setSpeedMater(speedMater);
 		// センサ
-		this.sensor = new SensorTester(util, this);
+		sensor.initAccels();
+		sensor.incCount();
 	}
 
 	@Override
@@ -209,7 +211,7 @@ public class CrawlRobot implements Robot {
         });
         manualShowCheck.setBackgroundColor(Color.DKGRAY);
         layout.addView(manualShowCheck);
-        manualShowCheck.setChecked(true);
+        manualShowCheck.setChecked(false);
 
 		// backボタン
 		backButton = new Button(parent);
@@ -466,5 +468,9 @@ public class CrawlRobot implements Robot {
 	@Override
 	public void onPause() {
 		sensor.onPause();
+		testMode.onPause();
+		pointOutMode.onPause();
+		showInfoMode.onPause();
+		autoEmoMode.onPause();
 	}
 }

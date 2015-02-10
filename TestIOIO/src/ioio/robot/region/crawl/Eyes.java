@@ -64,7 +64,10 @@ public class Eyes extends Region {
 		led[0].setLuminous(lum);
 	}
 	public void flick(){
-		
+		if( intrruptTask() ){
+			ses = Executors.newSingleThreadScheduledExecutor();
+			ses.schedule(eyesFlickTask, 0, TimeUnit.MILLISECONDS);
+		}
 	}
 
 	/** 点滅のマネジメント **/

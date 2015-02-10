@@ -76,9 +76,9 @@ public class PointOutMode extends AutoMode {
 		isAuto = true;
         // タイマーを作成する
         ses[0] = Executors.newSingleThreadScheduledExecutor();
-        // 100msごとにtaskを実行する
+        // 200msごとにtaskを実行する
     	Log.i(TAG, "PointOutStarted");
-    	ses[0].scheduleAtFixedRate(task, 0L, 100L, TimeUnit.MILLISECONDS);
+    	ses[0].scheduleAtFixedRate(task, 0L, 200L, TimeUnit.MILLISECONDS);
 
     	wheel.setIsAutoControlled(this);
 		ears.setIsAutoControlled(this);
@@ -90,6 +90,7 @@ public class PointOutMode extends AutoMode {
 		if(!isAuto)	return;
 		isAuto = false;
 		robot.stand();
+		wheel.stop();
     	wheel.setIsAutoControlled(null);
 		ears.setIsAutoControlled(null);
 		eyes.setIsAutoControlled(null);
@@ -108,21 +109,32 @@ public class PointOutMode extends AutoMode {
     	private boolean isPointingOutKneeShaking;
     	private int goal;
     	private boolean goalReached;
+    	int step = 0;
     	
         @Override
         public void run() {
         	Log.d("PointOut", "running...");
         	if(!isAuto)	return;
         	
-        	float dif = sensor.getPitchDifference();
-        	int tpType = sensor.getNowTpType();
-        	
+        	int tpType = robot.sensor.getNowTpType();
+        	shoulder = sensor.getMaxTpIndex() - 3;
+        	back = sensor.getMaxTpIndex() / 2;
+        	leg = 2;
+
         	if(isPointingOutSlouching){			// 猫背指摘モード
         		if(!isSlouching()){	// 解消されたとき
         			endPointingOut();
         		}else{
 	        		if(goalReached){	// 目的地点についた
 	        			// 前後移動
+    					switch(step){
+    					case 0: goal = back - 3; break;
+    					case 1: goal = back + 3; break;
+    					}
+    					goalReached = false;
+    					step = 1-step;
+    					// 目の点滅
+        				eyes.flick();
 	        		}else{				// 目的地点到達前
 	        			toGoal();
 	        		}
@@ -133,6 +145,8 @@ public class PointOutMode extends AutoMode {
         		}else{
         			if(goalReached){	// 目的地点についた
         				// わちゃわちゃ
+        				ears.swing();
+        				eyes.flick();
 	        		}else{				// 目的地点到達前
 	        			toGoal();
 	        		}
@@ -153,6 +167,7 @@ public class PointOutMode extends AutoMode {
 	        			startPointOutKneeShaking();
 	        		}else{
 	        			robot.stand();
+	        			toGoal();
 	        		}
 	        	}
         	}
@@ -160,29 +175,43 @@ public class PointOutMode extends AutoMode {
 
 		// 貧乏揺すりしてる？
 		private boolean isKneeShaking() {
-			// TODO Auto-generated method stub
-			return false;
+			return sensor.isKneeShaking();
 		}
 
 		// 猫背？
 		private boolean isSlouching() {
-			// TODO Auto-generated method stub
-			return false;
+			return sensor.isSlouching();
 		}
 		
 		
         // 目標値点へ
 		private void toGoal() {
-			// TODO Auto-generated method stub
-			
+			int nowTpIndex = sensor.getNowTpIndex();
+			if(nowTpIndex == goal){
+				wheel.stop();
+				goalReached = true;
+				return;
+			}else if(nowTpIndex > goal){
+				try {
+					wheel.goBackward();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}else if(nowTpIndex < goal){
+				try {
+					wheel.goForward();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		
 		// 指摘の終了
 		private void endPointingOut() {
 			isPointingOutSlouching = false;
 			isPointingOutKneeShaking = false;
-			goalReached = false;
 			goal = shoulder;
+			goalReached = false;
 			robot.stand();
 		}
 		

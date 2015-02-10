@@ -411,7 +411,7 @@ public class SensorTester {
 			cycleCount++;
 			addTp(cycleCount, true);
 		}else if(trailFixed){
-			if(cycleCount==trailView.getTpLength())	return;
+			if(cycleCount==trailView.getTpLength()-1)	return;
 			cycleCount++;
 			trailView.selectTp(cycleCount);
 		}
@@ -480,6 +480,9 @@ public class SensorTester {
 	public int getNowTpIndex() {
 		return cycleCount;
 	}
+	public int getMaxTpIndex() {
+		return trailView.getTpLength();
+	}
 	public float getPitchDifference(){
 		float dif = getPitch()-nowTp.pitch;
 		//Log.i(TAG, "now pitch: " + getPitch() + ", tp pitch: " + nowTp.pitch);
@@ -495,6 +498,13 @@ public class SensorTester {
 	}
 	public float getRoll(){
 		return roll;
+	}
+	
+	public boolean isSlouching(){
+		return poseAnalizer.isSlouching(getNowTpType(), getPitchDifference());
+	}
+	public boolean isKneeShaking(){
+		return accelAnalizer.isKneeShaking(getNowTpType(), accelView.getPeak(), accelView.getPeakVal(), accelView.getRange());
 	}
 
 	

@@ -90,7 +90,7 @@ public class TestMode extends AutoMode {
 
 	/** é©ìÆêßå‰ÇÃÉ^ÉXÉN **/
     private final Runnable task = new Runnable(){
-    	private int[] taskLoopDrive = {1,1,1,1-1,-1,-1,-1,0,0,0,0};
+    	private int[] taskLoopDrive = {1,1,1,1,1,-1,-1,-1,0,0,0,0};
     	private int[] taskLoopEars = {0,0,0,0,0,0,1,-1,1,-1,0,0};
     	private int taskCnt = 0;
         @Override

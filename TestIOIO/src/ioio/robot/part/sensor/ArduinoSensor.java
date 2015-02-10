@@ -22,7 +22,7 @@ public class ArduinoSensor {
 	private final static String TAG = "ArduinoSensor";
 	
 	private boolean isReading;
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 	
     
 	// 初期化(接続するたびに呼び出す)
@@ -33,7 +33,9 @@ public class ArduinoSensor {
 	}
 	
 	public boolean getData(float[] attitude, int[] accel) throws IOException{
-		if(isActive && !isReading){
+		if(!isActive){
+			return false;
+		}else if(!isReading){
 			isReading = true;
 			/*
 			// データたまり過ぎのとき破棄して戻る
@@ -125,6 +127,7 @@ public class ArduinoSensor {
 	
 	public void disactivate(){
 		isActive = false;
+		isReading = false;
 		//if(in!=null)	in.close();
 		//if(out!=null)	out.close();
 		isr = null;

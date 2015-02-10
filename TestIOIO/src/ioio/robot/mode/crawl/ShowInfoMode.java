@@ -90,6 +90,8 @@ public class ShowInfoMode extends AutoMode {
 		if(!isAuto)	return;
 		isAuto = false;
 		robot.stand();
+    	eyes.manageFlick(false);
+		ears.manageSwing(false);
     	wheel.setIsAutoControlled(null);
 		ears.setIsAutoControlled(null);
 		eyes.setIsAutoControlled(null);
@@ -106,7 +108,7 @@ public class ShowInfoMode extends AutoMode {
     private final Runnable task = new Runnable(){
         @Override
         public void run() {
-        	//Log.d("showInfo", "running...");
+        	Log.d("showInfo", "running...");
         	if(!isAuto)	return;
         	
         	float dif = sensor.getPitchDifference();

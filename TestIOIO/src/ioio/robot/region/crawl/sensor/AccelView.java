@@ -17,11 +17,11 @@ import android.view.View.MeasureSpec;
 
 public class AccelView extends View {
     private ScheduledExecutorService[] ses = null;
-    private static final int halfHeight = 100;
+    private static final int halfHeight = 75;
     
     private ArrayList<Float> accelNorm;
     private static final int ACCEL_NORM_SIZE = 70;
-    private static final int HEIGHT_RATE = 200;
+    private static final int HEIGHT_RATE = 180;
     private static final int WIDTH_RATE = 3;
     private static final int FFT_SIZE = 64;
     private static final int FFT_POINT = (int)Math.sqrt(FFT_SIZE);
