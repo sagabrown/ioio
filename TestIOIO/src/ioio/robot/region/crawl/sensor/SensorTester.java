@@ -3,6 +3,8 @@ package ioio.robot.region.crawl.sensor;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.part.sensor.ArduinoSensor;
+import ioio.robot.part.sensor.MPU9150;
+import ioio.robot.part.sensor.MPU9250;
 import ioio.robot.robot.CrawlRobot;
 import ioio.robot.util.Util;
 
@@ -42,7 +44,7 @@ public class SensorTester {
     private final static boolean saveAccelsLog = false;
 	
     private ShockSensor shockSensor;
-    private ArduinoSensor sensorModule;
+    private MPU9250 sensorModule;
     private PoseAnalizer poseAnalizer;
     private AccelAnalizer accelAnalizer;
 	
@@ -90,7 +92,8 @@ public class SensorTester {
 		this.parent = parent;
 	    poseAnalizer = new PoseAnalizer();
 	    accelAnalizer = new AccelAnalizer();
-		sensorModule = new ArduinoSensor();
+		sensorModule = new MPU9250();
+		sensorModule.init();
 		initInfo();
 		isLogging = false;
 		accelsList = new ArrayList<Integer[]>();
@@ -119,14 +122,20 @@ public class SensorTester {
 			
 			if(!hasData)	return;
 			
+
+			azimuth = attitude[2];
+			pitch = attitude[0];
+			roll = attitude[1];
+			/*
 			azimuth = attitude[2] * DEG2RAD;
 			pitch = attitude[0] * DEG2RAD;
 			roll = attitude[1] * DEG2RAD;
+			*/
 			
 		    // 生データをテキスト表示
-			util.setText(azimuthText, Float.toString(attitude[2]));
-			util.setText(pitchText, Float.toString(attitude[0]));
-			util.setText(rollText, Float.toString(attitude[1]));
+			util.setText(azimuthText, String.format("%.3f", azimuth));
+			util.setText(pitchText, String.format("%.3f", pitch));
+			util.setText(rollText, String.format("%.3f", roll));
 	
 			// 直交座標に変換
 			double theta, phi;
@@ -147,7 +156,7 @@ public class SensorTester {
 			z2 = (float)(Math.cos(theta));
 
 			// 現在の情報
-			trailView.setNowData(attitude[2], attitude[0], attitude[1],x1,y1,z1,x2,y2,z2);
+			trailView.setNowData(azimuth*RAD2DEG, pitch*RAD2DEG, roll*RAD2DEG,x1,y1,z1,x2,y2,z2);
 			nowTp = trailView.getNowTp();
 			
 			// 加速度の表示
@@ -367,8 +376,8 @@ public class SensorTester {
 	
 	
 	
-	public void openPins(IOIO ioio, int pinNum1, int pinNum2) throws ConnectionLostException, InterruptedException, IOException{
-		sensorModule.openPins(ioio, pinNum1, pinNum2);
+	public void openPins(IOIO ioio, int[] pinNum) throws ConnectionLostException, InterruptedException, IOException{
+		sensorModule.openPins(ioio, pinNum);
 	}
 
 	public void activate() throws ConnectionLostException {
@@ -381,7 +390,7 @@ public class SensorTester {
 			ses[i] = Executors.newSingleThreadScheduledExecutor();
 		}
 		sensorInited = true;
-        // 100msごとにtaskを実行する
+        // SAMPLING_INTERVAL msごとにtaskを実行する
         ses[0].scheduleAtFixedRate(task, 0L, SAMPLING_INTERVAL, TimeUnit.MILLISECONDS);
 	}
 	

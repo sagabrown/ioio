@@ -564,8 +564,8 @@ public class TrailView extends GLSurfaceView {
     public void onResume(){
         // タイマーを作成する
         ses = Executors.newSingleThreadScheduledExecutor();
-        // 1000msごとにRunnableの処理を実行する
-        ses.scheduleAtFixedRate(task, 0L, 1000L, TimeUnit.MILLISECONDS);
+        // 500msごとにRunnableの処理を実行する
+        ses.scheduleAtFixedRate(task, 0L, 500L, TimeUnit.MILLISECONDS);
     }
  
     public void onPause(){

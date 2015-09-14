@@ -344,7 +344,7 @@ public class CrawlRobot implements Robot {
 		int cnt = startPin;
 		// 9Ž²ƒZƒ“ƒT‚Ì“ü—Íƒsƒ“(pin1,2)
 		try {
-			sensor.openPins(ioio, 1, 2);
+			sensor.openPins(ioio, new int[]{1});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
