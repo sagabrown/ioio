@@ -9,9 +9,10 @@ import java.util.concurrent.TimeUnit;
 import ioio.lib.api.DigitalInput;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.MainActivity;
-import ioio.robot.R;
+import ioio.momot.MainActivity;
+import ioio.momot.R;
 import ioio.robot.mode.crawl.AutoEmoMode;
+import ioio.robot.mode.crawl.InteractionMode;
 import ioio.robot.mode.crawl.PointOutMode;
 import ioio.robot.mode.crawl.ShowInfoMode;
 import ioio.robot.mode.crawl.TestMode;
@@ -21,6 +22,7 @@ import ioio.robot.part.motor.DCMotor;
 import ioio.robot.part.motor.Motor;
 import ioio.robot.part.motor.SG90;
 import ioio.robot.part.motor.ServoMotor;
+import ioio.robot.part.sensor.TouchSensor;
 import ioio.robot.region.crawl.Ears;
 import ioio.robot.region.crawl.Eyes;
 import ioio.robot.region.crawl.Wheel;
@@ -50,12 +52,12 @@ import android.widget.ToggleButton;
 
 /**
 pin 1, 2	: i2cセンサ通信
-pin 3, 4	: DCモータ
-pin 5		: サーボモータ
-pin 6		: スピーカー
-pin 7		: 回転数入力
-pin 10-12	: LED
-pin 13, 14	: リミットスイッチ
+pin 4		: 回転数入力
+pin 5, 6	: DCモータ
+pin 7		: サーボモータ
+pin 9		: スピーカー?
+pin 12-14	: LED
+pin 10, 11	: リミットスイッチ
 **/
 
 public class CrawlRobot implements Robot {
@@ -74,10 +76,14 @@ public class CrawlRobot implements Robot {
 	public Wheel wheel;
 	public Ears ears;
 	public Eyes eyes;
-	
-	private final static int[][] wheelPinNums = {{3, 4}};
-	private final static int[][] earsPinNums = {{5}};
-	private final static int[][] eyesPinNums = {{10,11,12}};
+	public TouchSensor[] touchSensor;
+
+	private final static int speedMaterPinNum = 4;
+	private final static int sensorPinNum = 1;
+	private final static int[][] wheelPinNums = {{5, 6}};
+	private final static int[][] earsPinNums = {{7}};
+	private final static int[][] eyesPinNums = {{12,13,14}};
+	private final static int[][] touchSensorPinNum = {{10}, {11}};
 	
 	private SpeedMater speedMater;
 	public SensorTester sensor;
@@ -89,11 +95,12 @@ public class CrawlRobot implements Robot {
 	private AutoEmoMode autoEmoMode;
 	private ShowInfoMode showInfoMode;
 	private PointOutMode pointOutMode;
+	private InteractionMode interactionMode;
 	
 	private LinearLayout layout;
 	private LinearLayout modeSelectLayout, manualContollerLayout, sensorTextLayout, trailControllerLayout, trailViewLayout;
 	private FrameLayout sensorLayout;
-	private ToggleButton autoButton, autoEmoButton, showInfoButton, pointOutButton;
+	private ToggleButton autoButton, autoEmoButton, showInfoButton, pointOutButton, interactionButton;
 	private Button backButton, forwardButton, stopButton;
 	private Button[] emoButton;
     private boolean isActive, isAuto;
@@ -109,11 +116,15 @@ public class CrawlRobot implements Robot {
 		eyes = new Eyes(util);
 		speedMater = new SpeedMater(util, distPerCycle, slitNum, this);
 		sensor = new SensorTester(util, this);
+		touchSensor = new TouchSensor[2];
+		touchSensor[0] = new TouchSensor(util, "head");
+		touchSensor[1] = new TouchSensor(util, "back");
 
 		testMode = new TestMode();
 		autoEmoMode = new AutoEmoMode();
 		showInfoMode = new ShowInfoMode();
 		pointOutMode = new PointOutMode();
+		interactionMode = new InteractionMode();
 		init();
 	}
 
@@ -123,6 +134,7 @@ public class CrawlRobot implements Robot {
 		autoEmoMode.setParams(util, this);
 		showInfoMode.setParams(util, this);
 		pointOutMode.setParams(util, this);
+		interactionMode.setParams(util, this);
 		wheel.init();
 		ears.init();
 		eyes.init();
@@ -131,6 +143,7 @@ public class CrawlRobot implements Robot {
 		// センサ
 		sensor.initAccels();
 		sensor.incCount();
+		for(TouchSensor t : touchSensor)	t.init();
 	}
 
 	@Override
@@ -274,10 +287,13 @@ public class CrawlRobot implements Robot {
         autoLayout.addView(autoEmoButton,lp);
         // 判定結果提示切り替えのボタン
         showInfoButton = showInfoMode.getOnOffButton(parent);
-        autoLayout.addView(showInfoButton,lp);
+        //autoLayout.addView(showInfoButton,lp);
         // 指摘モード切り替えのボタン
         pointOutButton = pointOutMode.getOnOffButton(parent);
         autoLayout.addView(pointOutButton,lp);
+        // インタラクションモード切り替えのボタン
+        interactionButton = interactionMode.getOnOffButton(parent);
+        autoLayout.addView(interactionButton,lp);
         
 		return autoLayout;
 	}
@@ -344,19 +360,22 @@ public class CrawlRobot implements Robot {
 		int cnt = startPin;
 		// 9軸センサの入力ピン(pin1,2)
 		try {
-			sensor.openPins(ioio, new int[]{1});
+			sensor.openPins(ioio, new int[]{sensorPinNum});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        // ピンにモーターを対応させる(pin3-5)
+        // ピンにモーターを対応させる
 		wheel.openPins(ioio, wheelPinNums);
 		ears.openPins(ioio, earsPinNums);
-		// スピーカー(pin6)
-		//ioio.openPwmOutput(6, 500).setDutyCycle(0.5f);
-		// スピードメータの入力ピン(pin7)
-		speedMater.openPins(ioio, 7);
-		// 目(pin10-12)
+		// スピーカー
+		//ioio.openPwmOutput(7, 500).setDutyCycle(0.5f);
+		// スピードメータの入力ピン
+		speedMater.openPins(ioio, speedMaterPinNum);
+		// 目
 		eyes.openPins(ioio, eyesPinNums);
+		// タッチセンサ
+		touchSensor[0].openPins(ioio, touchSensorPinNum[0]);
+		touchSensor[1].openPins(ioio, touchSensorPinNum[1]);
 		
 		return cnt;
 	}
@@ -369,6 +388,7 @@ public class CrawlRobot implements Robot {
 		eyes.activate();
 		speedMater.activate();
 		sensor.activate();
+		for(TouchSensor t : touchSensor)	t.activate();
 		for(Button b : emoButton)	util.setEnabled(b, true);
 		isActive = true;
 	}
@@ -380,6 +400,7 @@ public class CrawlRobot implements Robot {
 		eyes.disactivate();
 		speedMater.disactivate();
 		sensor.disactivate();
+		for(TouchSensor t : touchSensor)	t.disactivate();
 		for(Button b : emoButton)	util.setEnabled(b, false);
 		isActive = false;
 	}
@@ -391,6 +412,7 @@ public class CrawlRobot implements Robot {
 		eyes.disconnected();
 		speedMater.disconnected();
 		sensor.disconnected();
+		for(TouchSensor t : touchSensor)	t.disconnected();
 		for(Button b : emoButton)	util.setEnabled(b, false);
 		isActive = false;
 	}
@@ -472,5 +494,6 @@ public class CrawlRobot implements Robot {
 		pointOutMode.onPause();
 		showInfoMode.onPause();
 		autoEmoMode.onPause();
+		interactionMode.onPause();
 	}
 }

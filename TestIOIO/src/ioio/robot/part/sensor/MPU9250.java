@@ -10,6 +10,10 @@ import ioio.lib.api.TwiMaster;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.robot.part.PinOpenable;
 
+/**
+ * IOIOのtwi通信にはタイムアウトが無いので, 操作は必ず別スレッドで行うこと.
+ * でないと通信が切れたときフリーズする.
+ */
 public class MPU9250 implements PinOpenable {
 	private static final boolean DEBUG_REGISTER = false;
 	private static final boolean DEBUG_CALC_ATTITUDE = false;
@@ -18,8 +22,7 @@ public class MPU9250 implements PinOpenable {
 	private static final long SAMPRING_RATE = 200L;
 	
 	// 各センサのスレーブアドレス
-	//private byte MPU6050Address = (byte) 0b1101000;  // JRE1.7じゃないと使えない
-	private byte MPU6050Address = 0X68;
+	private byte MPU6050Address = 0X69; // AD0 = Hのとき
 	private byte AK8975Address = 0X0C;
     // 加速度・ジャイロセンサのレジスタマップ
     private static final byte WHO_AM_I = 0X75;
@@ -64,7 +67,22 @@ public class MPU9250 implements PinOpenable {
 	GetAccelAndGyroTask task1;
 	GetGeomagTask task2;
 
-	
+
+    private class SensorInitTask implements Runnable{
+		@Override
+		public void run() {
+			try {
+				// MPU6050のスリープビット(107番レジスタのBit6)を0にして各機能を有効化
+				writeByte(MPU6050Address, (byte)0X6B, (byte)0X00);
+				// MPU6050のI2C _BYPASS _EN(55番レジスタのBit1)を1にしてauxiliary I2Cを有効化 
+				writeByte(MPU6050Address, (byte)0X37, (byte)0X02);
+				// AK8975の10番レジスタに0x12を書き込みAD変換開始
+				writeByte(AK8975Address, (byte)10, (byte)0X12);
+			} catch (InterruptedException e) {e.printStackTrace();
+			} catch (ConnectionLostException e) {e.printStackTrace();
+			}
+		}
+    };
     private class GetAccelAndGyroTask implements Runnable{
     	short[] accel, gyro;
     	public void setAccel(short[] accel){
@@ -104,13 +122,12 @@ public class MPU9250 implements PinOpenable {
         			try {
         		    	synchronized(accel){synchronized(gyro){synchronized(geomag){synchronized(attitude){
         		    		count++;
-        		    		Log.e("sensor", "start: "+count);
+        		    		//Log.e("sensor", "start: "+count);
         		    		if(reading){
         		    			Log.e("sensor", "skip");
         		    			return;
         		    		}
         		    		reading = true;
-        		    		long start = System.currentTimeMillis();
 	        				//getAccelAndGyroFromSensor(accel, gyro);
 	        				getMotion9FromSensor(accel, gyro, geomag);
 	        				float[] newAttitude = new float[3];
@@ -138,7 +155,9 @@ public class MPU9250 implements PinOpenable {
     }
     
     public void stopCommunication(){
-    	timer.cancel();
+    	if(timer != null){
+    		timer.cancel();
+    	}
     }
     
     public boolean getData(float[] attitude, int[] accel){
@@ -228,7 +247,7 @@ public class MPU9250 implements PinOpenable {
 
 
 	// 加速度の値を取得してaccelに格納
-	public void getAccelFromSensor(short[] accel) throws ConnectionLostException, InterruptedException{
+	private void getAccelFromSensor(short[] accel) throws ConnectionLostException, InterruptedException{
 		// byteデータの読み込み
 		byte[] data = new byte[6];
 		readBytes(MPU6050Address, ACCEL_XOUT_H, data);
@@ -240,7 +259,7 @@ public class MPU9250 implements PinOpenable {
 	}
 	
 	// ジャイロの値を取得してgyroに格納
-	public void getGyroFromSensor(short[] gyro) throws ConnectionLostException, InterruptedException{
+	private void getGyroFromSensor(short[] gyro) throws ConnectionLostException, InterruptedException{
 		// byteデータの読み込み
 		byte[] data = new byte[6];
 		readBytes(MPU6050Address, GYRO_XOUT_H, data);
@@ -252,7 +271,7 @@ public class MPU9250 implements PinOpenable {
 	}
 	
 	// 加速度とジャイロの値を取得してaccel, gyroに格納
-	public void getAccelAndGyroFromSensor(short[] accel, short[] gyro) throws ConnectionLostException, InterruptedException{
+	private void getAccelAndGyroFromSensor(short[] accel, short[] gyro) throws ConnectionLostException, InterruptedException{
 		// byteデータの読み込み
 		byte[] data = new byte[14];
 		readBytes(MPU6050Address, ACCEL_XOUT_H, data);
@@ -265,7 +284,7 @@ public class MPU9250 implements PinOpenable {
 	}
 	
 	// 地磁気の値を取得してgeomagneticに格納
-	public void getGeomagneticFromSensor(short[] geomagnetic) throws ConnectionLostException, InterruptedException{
+	private void getGeomagneticFromSensor(short[] geomagnetic) throws ConnectionLostException, InterruptedException{
 		
 		// byteデータの読み込み
 		byte[] data = new byte[8];
@@ -284,7 +303,7 @@ public class MPU9250 implements PinOpenable {
 	}
 	
 	// 加速度、ジャイロ、地磁気の値を取得してaccel, gyro, geomagneticに格納
-	public void getMotion9FromSensor(short[] accel, short[] gyro, short[] geomagnetic) throws ConnectionLostException, InterruptedException{
+	private void getMotion9FromSensor(short[] accel, short[] gyro, short[] geomagnetic) throws ConnectionLostException, InterruptedException{
 		if(task1 != null){
 			task1.setAccel(accel);
 			task1.setGyro(gyro);
@@ -330,12 +349,12 @@ public class MPU9250 implements PinOpenable {
     /* 
      * 読み出しに関する関数
      */
-    protected byte readByte(int address, byte registerAddress, byte result) throws ConnectionLostException, InterruptedException {
+	private byte readByte(int address, byte registerAddress, byte result) throws ConnectionLostException, InterruptedException {
     	byte results[] = {result};
     	readBytes(address, registerAddress, results);
     	return results[0];
     }
-    protected void readBytes(int address, byte registerAddress, byte[] result) throws ConnectionLostException, InterruptedException {
+	private void readBytes(int address, byte registerAddress, byte[] result) throws ConnectionLostException, InterruptedException {
     	byte request[] = {registerAddress};
     	flush(address, request, result);
 
@@ -349,11 +368,11 @@ public class MPU9250 implements PinOpenable {
     	}
     }
     
-    protected void flush(int address, byte[] request, byte[] result) throws ConnectionLostException, InterruptedException {
+	private void flush(int address, byte[] request, byte[] result) throws ConnectionLostException, InterruptedException {
 
-    	long start = System.currentTimeMillis();
+    	//long start = System.currentTimeMillis();
 		twi.writeRead(address, false, request, request.length, result, result.length);
-		Log.w("sensor", "flush_time: "+(System.currentTimeMillis()-start));
+		//Log.w("sensor", "flush_time: "+(System.currentTimeMillis()-start));
 		
         if (request.length > 1 && REGISTER_WRITE_DELAY > 0)
                 Thread.sleep(REGISTER_WRITE_DELAY);
@@ -394,16 +413,8 @@ public class MPU9250 implements PinOpenable {
 
 	@Override
 	public void activate() throws ConnectionLostException {
-		try {
-			// MPU6050のスリープビット(107番レジスタのBit6)を0にして各機能を有効化
-			writeByte(MPU6050Address, (byte)0X6B, (byte)0X00);
-			// MPU6050のI2C _BYPASS _EN(55番レジスタのBit1)を1にしてauxiliary I2Cを有効化 
-			writeByte(MPU6050Address, (byte)0X37, (byte)0X02);
-			// AK8975の10番レジスタに0x12を書き込みAD変換開始
-			writeByte(AK8975Address, (byte)10, (byte)0X12);
-		} catch (InterruptedException e) {e.printStackTrace();
-		} catch (ConnectionLostException e) {e.printStackTrace();
-		}
+		
+		new Thread(new SensorInitTask()).start();
 		
 		startCommunication();
 	}

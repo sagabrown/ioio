@@ -15,9 +15,9 @@ import android.widget.LinearLayout;
 public class Ears extends Region {
 	private final static String TAG = "Ears";
 
-	private final static float EAR_FORWARD = 0.05f;
-	private final static float EAR_INIT = 0.5f;
-	private final static float EAR_BACKWARD = 0.8f;
+	private final static float EAR_FORWARD = 0.1f;
+	private final static float EAR_INIT = 0.3f;
+	private final static float EAR_BACKWARD = 0.6f;
 	private final static float EAR_DD = 0.02f;
 	private final static int EAR_SLEEP = 20;
 	
@@ -150,13 +150,13 @@ public class Ears extends Region {
         public void run() {
     		try {
 	    		forward();
-				Thread.sleep(100);
+				Thread.sleep(150);
 	    		backward();
-	    		Thread.sleep(100);
+	    		Thread.sleep(150);
 	    		forward();
-	    		Thread.sleep(100);
+	    		Thread.sleep(150);
 	    		backward();
-	    		Thread.sleep(100);
+	    		Thread.sleep(150);
 	    		reset();
 			} catch (InterruptedException e) {e.printStackTrace();}
         }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="controller">Controller</string>
-    <string name="app_name">IOIO ROBOT v2.0</string>
+    <string name="app_name">MoMot v3.0</string>
     <string name="pwm">motor ctrl</string>
     
     <string name="pref_display">display</string>

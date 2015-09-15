@@ -1,5 +1,6 @@
-package ioio.robot;
+package ioio.momot;
 
+import ioio.momot.R;
 import android.preference.PreferenceActivity;
 import android.util.Log;
 import android.content.SharedPreferences;

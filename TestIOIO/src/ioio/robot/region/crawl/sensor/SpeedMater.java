@@ -12,7 +12,7 @@ import android.widget.LinearLayout.LayoutParams;
 import ioio.lib.api.DigitalInput;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
-import ioio.robot.MainActivity;
+import ioio.momot.MainActivity;
 import ioio.robot.robot.Robot;
 import ioio.robot.util.Util;
 
