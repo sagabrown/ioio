@@ -75,7 +75,7 @@ public class InteractionMode extends AutoMode {
 		isAuto = true;
         // タイマーを作成する
         ses[0] = Executors.newSingleThreadScheduledExecutor();
-        // 100msごとにtaskを実行する
+        // 50msごとにtaskを実行する
     	Log.i(TAG, "InteractionStarted");
     	ses[0].scheduleAtFixedRate(task, 0L, 50L, TimeUnit.MILLISECONDS);
 		

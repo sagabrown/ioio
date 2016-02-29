@@ -7,6 +7,7 @@
     </string-array>
     <string-array name="servo_entryvalues_list_preference">
         <item>babt</item>
+        <item>4.3g</item>
         <item>sg90</item>
         <item>hs322hd</item>
     </string-array>

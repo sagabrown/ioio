@@ -13,7 +13,7 @@ import ioio.robot.part.PinOpenable;
 import ioio.robot.util.Util;
 
 public class TouchSensor implements PinOpenable {
-	private final static boolean DEBUG = false;
+	private final static boolean DEBUG = true;
 	
 	private DigitalInput pin;
 	protected static final int pinNum = 1;	// ïKóvÇ»ÉsÉìÇÃêî
@@ -108,7 +108,7 @@ public class TouchSensor implements PinOpenable {
 			Log.e(TAG, "cannot open pin: Ellegal pinNum");
 			return false;
 		}
-		pin = ioio.openDigitalInput(nums[0]);
+		pin = ioio.openDigitalInput(nums[0], DigitalInput.Spec.Mode.PULL_DOWN);
 		return true;
 	}
 

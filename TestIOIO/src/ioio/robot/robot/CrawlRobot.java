@@ -50,15 +50,6 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-/**
-pin 1, 2	: i2cセンサ通信
-pin 4		: 回転数入力
-pin 5, 6	: DCモータ
-pin 7		: サーボモータ
-pin 9		: スピーカー?
-pin 12-14	: LED
-pin 10, 11	: リミットスイッチ
-**/
 
 public class CrawlRobot implements Robot {
 	private final static String TAG = "CrawlRobot";
@@ -78,6 +69,15 @@ public class CrawlRobot implements Robot {
 	public Eyes eyes;
 	public TouchSensor[] touchSensor;
 
+	/**
+	pin 1, 2	: i2cセンサ通信
+	pin 4		: 回転数入力
+	pin 5, 6	: DCモータ
+	pin 7		: サーボモータ
+	pin 9		: スピーカー?
+	pin 12-14	: LED
+	pin 10, 11	: リミットスイッチ
+	**/
 	private final static int speedMaterPinNum = 4;
 	private final static int sensorPinNum = 1;
 	private final static int[][] wheelPinNums = {{5, 6}};
@@ -111,7 +111,7 @@ public class CrawlRobot implements Robot {
 		this.util = util;
 		this.sharedPreferences = sharedPreferences;
 		
-		wheel = new Wheel(util);
+		wheel = new Wheel(util, this);
 		ears = new Ears(util);
 		eyes = new Eyes(util);
 		speedMater = new SpeedMater(util, distPerCycle, slitNum, this);
@@ -387,7 +387,7 @@ public class CrawlRobot implements Robot {
 		ears.activate();
 		eyes.activate();
 		speedMater.activate();
-		sensor.activate();
+		//sensor.activate();
 		for(TouchSensor t : touchSensor)	t.activate();
 		for(Button b : emoButton)	util.setEnabled(b, true);
 		isActive = true;
@@ -420,8 +420,26 @@ public class CrawlRobot implements Robot {
 
 	/** 平常 **/
 	public void stand(){
+		float[] pink = new float[]{1.0f, 0.4f, 0.4f};
+		
+		eyes.setColor(pink);
+
+		try {
+			ears.backwardSlowly();
+			Thread.sleep(1000);
+			ears.swing();
+			Thread.sleep(1000);
+			ears.backwardSlowly();
+			Thread.sleep(1000);
+			ears.swing();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		/*
 		eyes.green();
 		ears.reset();
+		*/
 	}
 	/** 喜ぶ 
 	 * @throws InterruptedException **/

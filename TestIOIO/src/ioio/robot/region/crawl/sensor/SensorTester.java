@@ -34,6 +34,8 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 public class SensorTester {
+	private final static boolean SHOW_RAW_DATA = false;
+	
 	Util util;
 	CrawlRobot parent;
 	public final static String TAG = "SensorTester";
@@ -168,9 +170,15 @@ public class SensorTester {
 			if(accel_logging)	addAccels(accel);
 			
 			// ”»’è
+			/*
 			util.setText(infoLabel,
 					poseAnalizer.getPoseInfo(getNowTpType(), getPitchDifference())
 					+" / "+ accelAnalizer.getAccelInfo(getNowTpType(), accelView.getPeak(), accelView.getPeakVal(), accelView.getRange()));
+			*/
+
+        	String posture = (isSlouching())? "”L”w":"OK";
+        	String habits = (isKneeShaking())? "•n–R—h‚·‚è":"OK";
+			util.setText(infoLabel,"posture: " + posture + "\n" + "habits: " + habits);
 		}
 	};
 
@@ -238,6 +246,7 @@ public class SensorTester {
 		tables.addView(tl2, lp);
 		
 		layout.addView(tables);
+		if(!SHOW_RAW_DATA)	tables.setVisibility(View.GONE);
 
 		// ”»’èŒ‹‰Ê‚ð•\Ž¦‚·‚étextView
 		infoLabel = new TextView(context);

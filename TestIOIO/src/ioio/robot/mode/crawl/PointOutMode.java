@@ -26,11 +26,13 @@ public class PointOutMode extends AutoMode {
 	private Eyes eyes;
 	private SensorTester sensor;
 	private int shoulder, back, leg;	// 代表点のインデックス
+	private String state;
 	
 	public PointOutMode() {
 		button = null;
 		isAuto = false;
 		ses = new ScheduledExecutorService[2];
+		state = "posture: OK"+"\n"+"habits: OK";
 	}
 	
 	public void setParams(Util util, CrawlRobot robot){
@@ -105,6 +107,8 @@ public class PointOutMode extends AutoMode {
 
 	/** 計測結果提示のタスク **/
     private final Runnable task = new Runnable(){
+    	private boolean slouching;
+    	private boolean kneeShaking;
     	private boolean isPointingOutSlouching;
     	private boolean isPointingOutKneeShaking;
     	private int goal;
@@ -120,9 +124,16 @@ public class PointOutMode extends AutoMode {
         	shoulder = sensor.getMaxTpIndex() - 3;
         	back = sensor.getMaxTpIndex() / 2;
         	leg = 2;
+        	
+        	slouching = isSlouching();
+        	kneeShaking = isKneeShaking();
+
+        	String posture = (slouching)? "猫背":"OK";
+        	String habits = (kneeShaking)? "貧乏揺すり":"OK";
+    		state = "posture: " + posture + "\n" +"habits: " + habits;
 
         	if(isPointingOutSlouching){			// 猫背指摘モード
-        		if(!isSlouching()){	// 解消されたとき
+        		if(!slouching){	// 解消されたとき
         			endPointingOut();
         		}else{
 	        		if(goalReached){	// 目的地点についた
@@ -140,7 +151,7 @@ public class PointOutMode extends AutoMode {
 	        		}
         		}
         	}else if(isPointingOutKneeShaking){	// 貧乏揺すり指摘モード
-        		if(!isKneeShaking()){	// 解消されたとき
+        		if(!kneeShaking){	// 解消されたとき
         			endPointingOut();
         		}else{
         			if(goalReached){	// 目的地点についた
@@ -156,14 +167,14 @@ public class PointOutMode extends AutoMode {
 	        	case TrailPoint.SHOLDER:
 	        	case TrailPoint.BACK:
 	            	// 姿勢が悪い？
-	        		if(isSlouching()){
+	        		if(slouching){
 	        			startPointOutSlouching();
 	            		break;
 	        		}
 	        		// 悪くなければ↓へ
 	        	default:
 	        		// 貧乏揺すり？
-	        		if(isKneeShaking()){
+	        		if(kneeShaking){
 	        			startPointOutKneeShaking();
 	        		}else{
 	        			robot.stand();

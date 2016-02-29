@@ -4,6 +4,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import ioio.robot.part.motor.BlueArrowBA_TS;
+import ioio.robot.part.motor.MicroServo43;
 import ioio.robot.part.motor.SG90;
 import ioio.robot.region.Region;
 import ioio.robot.util.Util;
@@ -15,8 +16,8 @@ import android.widget.LinearLayout;
 public class Ears extends Region {
 	private final static String TAG = "Ears";
 
-	private final static float EAR_FORWARD = 0.1f;
-	private final static float EAR_INIT = 0.3f;
+	private final static float EAR_FORWARD = 0.2f;
+	private final static float EAR_INIT = 0.4f;
 	private final static float EAR_BACKWARD = 0.6f;
 	private final static float EAR_DD = 0.02f;
 	private final static int EAR_SLEEP = 20;
@@ -24,7 +25,7 @@ public class Ears extends Region {
 	private final static double[] defaultMotorInitState = {0.0};
 	private final static int motorNum = defaultMotorInitState.length;
 	
-	private BlueArrowBA_TS[] motor;
+	private MicroServo43[] motor;
 	private LinearLayout layout;
 	
 	boolean alreadySwinging = false;
@@ -37,8 +38,8 @@ public class Ears extends Region {
 	/** 初期化つきコンストラクタ **/
 	public Ears(Util util, double[] motorInitState) {
 		this.util = util;
-		motor = new BlueArrowBA_TS[motorNum];
-		motor[0] = new BlueArrowBA_TS(util, "Ears", motorInitState[0]);
+		motor = new MicroServo43[motorNum];
+		motor[0] = new MicroServo43(util, "Ears", motorInitState[0]);
 		part = motor;
 	}
 	
@@ -101,7 +102,7 @@ public class Ears extends Region {
 					if( intrruptTask() ){
 						ses = Executors.newSingleThreadScheduledExecutor();
 		    	        Log.i(TAG, "earsSwingStarted");
-		    	        ses.scheduleAtFixedRate(swingEarsTask2, 0L, 200L, TimeUnit.MILLISECONDS);
+		    	        ses.scheduleAtFixedRate(swingEarsTask2, 0L, 250L, TimeUnit.MILLISECONDS);
 					}
 					alreadySwinging = true;
         	}
